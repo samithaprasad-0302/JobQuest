@@ -1,62 +1,43 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const contactSchema = new mongoose.Schema({
+const Contact = sequelize.define('Contact', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true
+  },
   firstName: {
-    type: String,
-    required: true,
-    trim: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
   lastName: {
-    type: String,
-    required: true,
-    trim: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
   email: {
-    type: String,
-    required: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
+    type: DataTypes.STRING,
+    allowNull: false
   },
   phone: {
-    type: String,
-    trim: true
+    type: DataTypes.STRING
   },
   subject: {
-    type: String,
-    required: true,
-    trim: true
+    type: DataTypes.STRING
   },
   message: {
-    type: String,
-    required: true,
-    trim: true
+    type: DataTypes.TEXT
   },
   status: {
-    type: String,
-    enum: ['new', 'read', 'replied', 'closed'],
-    default: 'new'
+    type: DataTypes.ENUM('new', 'read', 'replied', 'closed'),
+    defaultValue: 'new'
   },
-  reply: {
-    type: String,
-    trim: true
-  },
-  repliedAt: Date,
-  repliedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  submittedAt: {
-    type: Date,
-    default: Date.now
+  replies: {
+    type: DataTypes.JSON,
+    defaultValue: []
   }
 }, {
   timestamps: true
 });
 
-// Add indexes for better query performance
-contactSchema.index({ email: 1 });
-contactSchema.index({ status: 1 });
-contactSchema.index({ submittedAt: -1 });
-
-module.exports = mongoose.model('Contact', contactSchema);
+module.exports = Contact;

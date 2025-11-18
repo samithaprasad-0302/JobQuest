@@ -1,154 +1,75 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const companySchema = new mongoose.Schema({
+const Company = sequelize.define('Company', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true
+  },
   name: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 100
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
   },
   description: {
-    type: String,
-    maxlength: 2000,
-    default: 'No description available'
+    type: DataTypes.TEXT
   },
   industry: {
-    type: String,
-    trim: true,
-    default: 'Technology'
+    type: DataTypes.STRING
   },
   website: {
-    type: String,
-    trim: true,
-    match: [/^https?:\/\/.+/, 'Please enter a valid URL']
+    type: DataTypes.STRING
   },
   logo: {
-    type: String,
-    default: null
+    type: DataTypes.STRING
   },
   coverImage: {
-    type: String,
-    default: null
+    type: DataTypes.STRING
   },
   location: {
-    headquarters: {
-      type: String,
-      trim: true,
-      default: 'Not specified'
-    },
-    offices: [{
-      city: String,
-      country: String,
-      address: String
-    }]
+    type: DataTypes.JSON,
+    defaultValue: { headquarters: '' }
   },
   size: {
-    type: String,
-    enum: ['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5000+'],
-    default: '11-50'
+    type: DataTypes.STRING,
+    enum: ['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5001+']
   },
   founded: {
-    type: Number,
-    min: 1800,
-    max: new Date().getFullYear()
+    type: DataTypes.INTEGER
   },
-  socialMedia: {
-    linkedin: String,
-    twitter: String,
-    facebook: String,
-    instagram: String
+  benefits: {
+    type: DataTypes.JSON,
+    defaultValue: []
   },
-  benefits: [{
-    type: String,
-    trim: true
-  }],
   culture: {
-    type: String,
-    maxlength: 1000
+    type: DataTypes.TEXT
   },
-  values: [{
-    type: String,
-    trim: true
-  }],
   rating: {
-    overall: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0
-    },
-    workLifeBalance: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0
-    },
-    compensation: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0
-    },
-    culture: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0
-    },
-    management: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0
-    },
-    reviewCount: {
-      type: Number,
-      default: 0
+    type: DataTypes.JSON,
+    defaultValue: {
+      overall: 0,
+      workLifeBalance: 0,
+      compensation: 0,
+      culture: 0,
+      management: 0,
+      reviewCount: 0
     }
   },
-  jobs: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job'
-  }],
-  followers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  admins: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
   verified: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   featured: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   isActive: {
-    type: Boolean,
-    default: true
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
 }, {
   timestamps: true
 });
 
-// Indexes
-companySchema.index({ name: 'text', description: 'text' });
-companySchema.index({ industry: 1 });
-companySchema.index({ size: 1 });
-companySchema.index({ featured: 1 });
-companySchema.index({ verified: 1 });
-
-// Virtual for job count
-companySchema.virtual('jobCount').get(function() {
-  return this.jobs.length;
-});
-
-// Virtual for follower count
-companySchema.virtual('followerCount').get(function() {
-  return this.followers.length;
-});
-
-module.exports = mongoose.model('Company', companySchema);
+module.exports = Company;

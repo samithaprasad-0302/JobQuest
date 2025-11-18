@@ -1,183 +1,104 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const jobSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 100
+const Job = sequelize.define('Job', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true
   },
-  company: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Company'
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  companyId: {
+    type: DataTypes.UUID
   },
   companyName: {
-    type: String,
-    trim: true
+    type: DataTypes.STRING
   },
   description: {
-    type: String,
-    required: true,
-    maxlength: 5000
+    type: DataTypes.TEXT
   },
-  jobImage: {
-    type: mongoose.Schema.Types.Mixed, // Allow both string and object
-    default: null
+  requirements: {
+    type: DataTypes.JSON,
+    defaultValue: []
   },
-  requirements: [{
-    type: String,
-    trim: true
-  }],
-  responsibilities: [{
-    type: String,
-    trim: true
-  }],
-  skills: [{
-    type: String,
-    trim: true
-  }],
+  responsibilities: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
+  skills: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
   location: {
-    type: String,
-    required: true,
-    trim: true
+    type: DataTypes.STRING
   },
   isRemote: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   jobType: {
-    type: String,
-    enum: ['full-time', 'part-time', 'contract', 'freelance', 'internship'],
-    required: true
+    type: DataTypes.ENUM('full-time', 'part-time', 'contract', 'freelance', 'internship'),
+    defaultValue: 'full-time'
   },
   experienceLevel: {
-    type: String,
-    enum: ['entry', 'mid', 'senior', 'executive'],
-    required: false
+    type: DataTypes.ENUM('entry', 'mid', 'senior', 'executive'),
+    defaultValue: 'mid'
   },
   salary: {
-    min: {
-      type: Number,
-      min: 0
-    },
-    max: {
-      type: Number,
-      min: 0
-    },
-    currency: {
-      type: String,
-      enum: ['USD', 'LKR', 'INR'],
-      default: 'USD'
-    },
-    period: {
-      type: String,
-      enum: ['hourly', 'monthly', 'yearly'],
-      default: 'yearly'
+    type: DataTypes.JSON,
+    defaultValue: {
+      min: 0,
+      max: 0,
+      currency: 'USD',
+      period: 'yearly'
     }
   },
-  benefits: [{
-    type: String,
-    trim: true
-  }],
+  benefits: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
   category: {
-    type: String,
-    required: true,
-    enum: [
-      'technology', 'design', 'marketing', 'sales', 'finance', 
-      'healthcare', 'education', 'engineering', 'hr', 'operations',
-      'customer-service', 'legal', 'consulting', 'research', 'other'
-    ]
+    type: DataTypes.STRING
   },
   status: {
-    type: String,
-    enum: ['draft', 'active', 'paused', 'closed', 'expired'],
-    default: 'active'
+    type: DataTypes.ENUM('active', 'inactive', 'closed', 'draft'),
+    defaultValue: 'active'
   },
   featured: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   urgent: {
-    type: Boolean,
-    default: false
-  },
-  applicationDeadline: {
-    type: Date
-  },
-  link: {
-    type: String,
-    trim: true,
-    maxlength: 500
-  },
-  applicants: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    appliedAt: {
-      type: Date,
-      default: Date.now
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'reviewed', 'interview', 'rejected', 'accepted'],
-      default: 'pending'
-    },
-    coverLetter: String,
-    resume: String
-  }],
-  views: {
-    type: Number,
-    default: 0
-  },
-  saves: {
-    type: Number,
-    default: 0
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   postedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    type: DataTypes.UUID
   },
-  tags: [{
-    type: String,
-    trim: true
-  }]
+  applicationDeadline: {
+    type: DataTypes.DATE
+  },
+  applicants: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
+  views: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  saves: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  tags: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  }
 }, {
   timestamps: true
 });
 
-// Indexes for better query performance
-jobSchema.index({ title: 'text', description: 'text' });
-jobSchema.index({ category: 1 });
-jobSchema.index({ location: 1 });
-jobSchema.index({ jobType: 1 });
-jobSchema.index({ experienceLevel: 1 });
-jobSchema.index({ status: 1 });
-jobSchema.index({ featured: 1 });
-jobSchema.index({ createdAt: -1 });
-jobSchema.index({ company: 1 });
-
-// Virtual for application count
-jobSchema.virtual('applicationCount').get(function() {
-  return this.applicants.length;
-});
-
-// Method to check if job is expired
-jobSchema.methods.isExpired = function() {
-  if (!this.applicationDeadline) return false;
-  return new Date() > this.applicationDeadline;
-};
-
-// Static method to update expired jobs (call manually when needed)
-jobSchema.statics.updateExpiredJobs = async function() {
-  return this.updateMany(
-    { 
-      applicationDeadline: { $lt: new Date() },
-      status: { $ne: 'expired' }
-    },
-    { status: 'expired' }
-  );
-};
-
-module.exports = mongoose.model('Job', jobSchema);
+module.exports = Job;

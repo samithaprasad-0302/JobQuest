@@ -1,28 +1,35 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const newsletterSchema = new mongoose.Schema({
+const Newsletter = sequelize.define('Newsletter', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true
+  },
   email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
   },
-  subscribedAt: {
-    type: Date,
-    default: Date.now
+  isSubscribed: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   },
-  isActive: {
-    type: Boolean,
-    default: true
+  preferences: {
+    type: DataTypes.JSON,
+    defaultValue: {
+      jobAlerts: true,
+      weeklyDigest: true,
+      companyNews: true,
+      productUpdates: true
+    }
+  },
+  unsubscribeToken: {
+    type: DataTypes.STRING
   }
 }, {
   timestamps: true
 });
 
-// Add index for email to improve query performance
-newsletterSchema.index({ email: 1 });
-newsletterSchema.index({ subscribedAt: -1 });
-
-module.exports = mongoose.model('Newsletter', newsletterSchema);
+module.exports = Newsletter;

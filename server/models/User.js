@@ -1,249 +1,111 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
+const User = sequelize.define('User', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true
+  },
   firstName: {
-    type: String,
-    required: false,
-    trim: true,
-    maxlength: 50,
-    default: ''
+    type: DataTypes.STRING(50),
+    defaultValue: ''
   },
   lastName: {
-    type: String,
-    required: false,
-    trim: true,
-    maxlength: 50,
-    default: ''
+    type: DataTypes.STRING(50),
+    defaultValue: ''
   },
   email: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+    lowercase: true
   },
   password: {
-    type: String,
-    required: function() {
-      return !this.socialAuth.google.id && !this.socialAuth.facebook.id && 
-             !this.socialAuth.linkedin.id && !this.socialAuth.twitter.id;
-    },
-    minlength: 8
+    type: DataTypes.STRING,
+    allowNull: true
   },
   phone: {
-    type: String,
-    trim: true
+    type: DataTypes.STRING
   },
   location: {
-    type: String,
-    trim: true
+    type: DataTypes.STRING
   },
   bio: {
-    type: String,
-    trim: true,
-    maxlength: 1000
+    type: DataTypes.TEXT
   },
-  skills: [{
-    type: String,
-    trim: true
-  }],
-  experience: [{
-    title: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    company: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    location: {
-      type: String,
-      trim: true
-    },
-    startDate: {
-      type: Date,
-      required: true
-    },
-    endDate: {
-      type: Date
-    },
-    current: {
-      type: Boolean,
-      default: false
-    },
-    description: {
-      type: String,
-      trim: true
-    }
-  }],
-  education: [{
-    school: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    degree: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    fieldOfStudy: {
-      type: String,
-      trim: true
-    },
-    from: {
-      type: Date,
-      required: true
-    },
-    to: {
-      type: Date
-    },
-    current: {
-      type: Boolean,
-      default: false
-    },
-    description: {
-      type: String,
-      trim: true
-    }
-  }],
-  resume: {
-    filename: String,
-    originalName: String,
-    path: String,
-    uploadDate: {
-      type: Date,
-      default: Date.now
-    }
+  profilePicture: {
+    type: DataTypes.STRING
+  },
+  skills: {
+    type: DataTypes.JSON,
+    defaultValue: []
   },
   experience: {
-    type: String,
-    enum: ['entry', 'mid', 'senior', 'lead', 'executive'],
-    default: 'entry'
+    type: DataTypes.JSON,
+    defaultValue: []
   },
-  skills: [{
-    type: String,
-    trim: true
-  }],
-  bio: {
-    type: String,
-    maxlength: 1000
+  education: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
+  role: {
+    type: DataTypes.ENUM('user', 'employer', 'admin', 'super_admin'),
+    defaultValue: 'user'
+  },
+  isAdmin: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  emailVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  verificationToken: {
+    type: DataTypes.STRING
   },
   socialAuth: {
-    google: {
-      id: String,
-      email: String
-    },
-    facebook: {
-      id: String,
-      email: String
-    },
-    linkedin: {
-      id: String,
-      email: String
-    },
-    twitter: {
-      id: String,
-      email: String
+    type: DataTypes.JSON,
+    defaultValue: {
+      google: { id: null },
+      facebook: { id: null },
+      linkedin: { id: null },
+      twitter: { id: null }
     }
   },
   preferences: {
-    jobAlerts: {
-      type: Boolean,
-      default: true
-    },
-    newsletter: {
-      type: Boolean,
-      default: true
-    },
-    darkMode: {
-      type: Boolean,
-      default: false
-    }
+    type: DataTypes.JSON,
+    defaultValue: {}
   },
-  savedJobs: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job'
-  }],
-  appliedJobs: [{
-    job: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Job'
-    },
-    appliedAt: {
-      type: Date,
-      default: Date.now
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'reviewed', 'interview', 'rejected', 'accepted'],
-      default: 'pending'
-    }
-  }],
-  role: {
-    type: String,
-    enum: ['user', 'employer', 'admin', 'super_admin'],
-    default: 'user'
+  savedJobs: {
+    type: DataTypes.JSON,
+    defaultValue: []
   },
-  isVerified: {
-    type: Boolean,
-    default: false
-  },
-  verificationToken: String,
-  resetPasswordToken: String,
-  resetPasswordExpires: Date,
-  lastLogin: Date,
   isActive: {
-    type: Boolean,
-    default: true
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
 }, {
   timestamps: true
 });
 
-// Index for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ 'socialAuth.google.id': 1 });
-userSchema.index({ 'socialAuth.facebook.id': 1 });
-userSchema.index({ 'socialAuth.linkedin.id': 1 });
-userSchema.index({ 'socialAuth.twitter.id': 1 });
-
 // Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  
-  try {
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
+User.beforeCreate(async (user) => {
+  if (user.password) {
+    user.password = await bcrypt.hash(user.password, 12);
   }
 });
 
-// Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  if (!this.password) return false;
-  return bcrypt.compare(candidatePassword, this.password);
-};
-
-// Get full name
-userSchema.virtual('fullName').get(function() {
-  return `${this.firstName} ${this.lastName}`;
+User.beforeUpdate(async (user) => {
+  if (user.changed('password')) {
+    user.password = await bcrypt.hash(user.password, 12);
+  }
 });
 
-// Remove sensitive data when converting to JSON
-userSchema.methods.toJSON = function() {
-  const user = this.toObject();
-  delete user.password;
-  delete user.verificationToken;
-  delete user.resetPasswordToken;
-  delete user.resetPasswordExpires;
-  return user;
+// Method to compare passwords
+User.prototype.comparePassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = User;
