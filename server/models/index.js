@@ -11,6 +11,9 @@ const GuestApplication = require('./GuestApplication');
 User.hasMany(Application, { foreignKey: 'userId' });
 Application.belongsTo(User, { foreignKey: 'userId' });
 
+User.hasMany(Job, { foreignKey: 'postedById' });
+Job.belongsTo(User, { foreignKey: 'postedById', as: 'postedByUser' });
+
 Company.hasMany(Job, { foreignKey: 'companyId' });
 Job.belongsTo(Company, { foreignKey: 'companyId' });
 

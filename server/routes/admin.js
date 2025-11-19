@@ -23,8 +23,8 @@ router.get('/dashboard', adminAuth, async (req, res) => {
     
     // Get company statistics
     const totalCompanies = await Company.count();
-    const verifiedCompanies = await Company.count({ where: { isVerified: true } });
-    const pendingCompanies = await Company.count({ where: { isVerified: false } });
+    const verifiedCompanies = await Company.count({ where: { verified: true } });
+    const pendingCompanies = await Company.count({ where: { verified: false } });
     
     // Get guest application statistics
     const totalGuestApplications = await GuestApplication.count();
