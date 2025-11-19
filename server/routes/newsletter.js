@@ -51,8 +51,10 @@ router.get('/subscribers', authMiddleware, async (req, res) => {
   try {
     const user = req.user;
     
+    console.log('📋 /newsletter/subscribers - req.user:', user);
+    
     // Check if user is admin
-    if (user.role !== 'admin' && user.role !== 'super_admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
 
@@ -68,6 +70,7 @@ router.get('/subscribers', authMiddleware, async (req, res) => {
 
     res.status(200).json(stats);
   } catch (error) {
+    console.error('Newsletter subscribers GET error:', error);
     res.status(500).json({ message: 'Error fetching subscribers', error: error.message });
   }
 });

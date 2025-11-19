@@ -38,7 +38,9 @@ router.post('/submit', async (req, res) => {
 // Get all contacts (Admin only)
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+    console.log('📋 /contact - req.user:', req.user);
+    
+    if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'super_admin')) {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
 
@@ -70,6 +72,7 @@ router.get('/', authMiddleware, async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Contact GET error:', error);
     res.status(500).json({ message: 'Error fetching contacts', error: error.message });
   }
 });
