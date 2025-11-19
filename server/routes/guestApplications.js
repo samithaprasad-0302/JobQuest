@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const GuestApplication = require('../models/GuestApplication');
-const Job = require('../models/Job');
+const { GuestApplication, Job } = require('../models');
 
 // POST /api/guest-applications - Submit a guest application
 router.post('/', async (req, res) => {
@@ -25,27 +24,29 @@ router.post('/', async (req, res) => {
     }
 
     // Verify job exists
-    const job = await Job.findById(jobId);
+    const job = await Job.findByPk(jobId);
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
     }
 
     // Check for duplicate application (same email + job)
     const existingApplication = await GuestApplication.findOne({
-      email: email.toLowerCase(),
-      jobId: jobId
+      where: {
+        email: email.toLowerCase(),
+        jobId: jobId
+      }
     });
 
     if (existingApplication) {
       return res.status(409).json({
         error: 'You have already applied for this job',
-        applicationId: existingApplication._id,
+        applicationId: existingApplication.id,
         appliedAt: existingApplication.appliedAt
       });
     }
 
     // Create new guest application
-    const guestApplication = new GuestApplication({
+    const guestApplication = await GuestApplication.create({
       email: email.toLowerCase(),
       firstName,
       lastName,
@@ -58,10 +59,10 @@ router.post('/', async (req, res) => {
       userAgent: req.get('User-Agent')
     });
 
-    const savedApplication = await guestApplication.save();
-
     // Populate job details for response
-    await savedApplication.populate('jobId');
+    const savedApplication = await GuestApplication.findByPk(guestApplication.id, {
+      include: [{ model: Job }]
+    });
 
     res.status(201).json({
       message: 'Application submitted successfully',
@@ -91,7 +92,11 @@ router.get('/by-email/:email', async (req, res) => {
       return res.status(400).json({ error: 'Valid email is required' });
     }
 
-    const applications = await GuestApplication.getByEmail(email);
+    const applications = await GuestApplication.findAll({
+      where: { email: email.toLowerCase() },
+      include: [{ model: Job }],
+      order: [['appliedAt', 'DESC']]
+    });
     
     res.json({
       email: email.toLowerCase(),
@@ -114,7 +119,11 @@ router.get('/by-job/:jobId', async (req, res) => {
       return res.status(400).json({ error: 'Invalid job ID format' });
     }
 
-    const applications = await GuestApplication.getByJob(jobId);
+    const applications = await GuestApplication.findAll({
+      where: { jobId: jobId },
+      include: [{ model: Job }],
+      order: [['appliedAt', 'DESC']]
+    });
     
     res.json({
       jobId,
@@ -141,21 +150,23 @@ router.get('/', async (req, res) => {
       query.status = status;
     }
 
-    const applications = await GuestApplication.find(query)
-      .populate('jobId')
-      .sort({ appliedAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const applications = await GuestApplication.findAll({
+      where: query,
+      include: [{ model: Job }],
+      order: [['appliedAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
 
-    const total = await GuestApplication.countDocuments(query);
+    const total = await GuestApplication.count({ where: query });
 
     res.json({
       applications,
       pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
         totalItems: total,
-        itemsPerPage: limit
+        itemsPerPage: parseInt(limit)
       }
     });
 
@@ -181,17 +192,26 @@ router.put('/:id/status', async (req, res) => {
       });
     }
 
-    const application = await GuestApplication.findById(id);
+    const application = await GuestApplication.findByPk(id);
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
     }
 
-    await application.markAsReviewed(reviewerId, status, notes);
-    await application.populate('jobId');
+    // Update application status
+    application.status = status;
+    application.notes = notes || application.notes;
+    application.reviewerId = reviewerId || application.reviewerId;
+    application.reviewedAt = new Date();
+    await application.save();
+
+    // Reload with associations
+    const updated = await GuestApplication.findByPk(id, {
+      include: [{ model: Job }]
+    });
 
     res.json({
       message: 'Application status updated successfully',
-      application
+      application: updated
     });
 
   } catch (error) {
@@ -209,10 +229,12 @@ router.delete('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid application ID format' });
     }
 
-    const application = await GuestApplication.findByIdAndDelete(id);
+    const application = await GuestApplication.findByPk(id);
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
     }
+
+    await GuestApplication.destroy({ where: { id } });
 
     res.json({
       message: 'Application deleted successfully',

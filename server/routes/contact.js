@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const Contact = require('../models/Contact');
+const { Contact, User } = require('../models');
+const { Op } = require('sequelize');
 const authMiddleware = require('../middleware/auth');
 
 // Submit contact form (Public)
@@ -14,7 +15,7 @@ router.post('/submit', async (req, res) => {
     }
 
     // Create new contact
-    const contact = new Contact({
+    const contact = await Contact.create({
       firstName,
       lastName,
       email,
@@ -23,8 +24,6 @@ router.post('/submit', async (req, res) => {
       message,
       status: 'new'
     });
-
-    await contact.save();
 
     res.status(201).json({
       message: 'Your message has been sent successfully. We will get back to you soon!',
@@ -51,12 +50,15 @@ router.get('/', authMiddleware, async (req, res) => {
       query.status = status;
     }
 
-    const contacts = await Contact.find(query)
-      .sort({ submittedAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    const { Op } = require('sequelize');
+    const contacts = await Contact.findAll({
+      where: query,
+      order: [['submittedAt', 'DESC']],
+      offset: skip,
+      limit: parseInt(limit)
+    });
 
-    const total = await Contact.countDocuments(query);
+    const total = await Contact.count({ where: query });
 
     res.status(200).json({
       contacts,
@@ -79,11 +81,11 @@ router.get('/stats/summary', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
 
-    const total = await Contact.countDocuments();
-    const newMessages = await Contact.countDocuments({ status: 'new' });
-    const read = await Contact.countDocuments({ status: 'read' });
-    const replied = await Contact.countDocuments({ status: 'replied' });
-    const closed = await Contact.countDocuments({ status: 'closed' });
+    const total = await Contact.count();
+    const newMessages = await Contact.count({ where: { status: 'new' } });
+    const read = await Contact.count({ where: { status: 'read' } });
+    const replied = await Contact.count({ where: { status: 'replied' } });
+    const closed = await Contact.count({ where: { status: 'closed' } });
 
     res.status(200).json({
       total,
@@ -104,15 +106,17 @@ router.get('/:id', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
 
-    const contact = await Contact.findByIdAndUpdate(
-      req.params.id,
-      { status: 'read' },
-      { new: true }
-    ).populate('repliedBy', 'firstName lastName email');
+    const contact = await Contact.findByPk(req.params.id, {
+      include: [{ model: User, as: 'repliedByUser', attributes: ['firstName', 'lastName', 'email'] }]
+    });
 
     if (!contact) {
       return res.status(404).json({ message: 'Contact not found' });
     }
+
+    // Update status to read
+    contact.status = 'read';
+    await contact.save();
 
     res.status(200).json(contact);
   } catch (error) {
@@ -133,20 +137,26 @@ router.put('/:id/reply', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Please provide a reply message' });
     }
 
-    const contact = await Contact.findByIdAndUpdate(
-      req.params.id,
-      {
-        reply,
-        status: 'replied',
-        repliedAt: new Date(),
-        repliedBy: req.user.id
-      },
-      { new: true }
-    ).populate('repliedBy', 'firstName lastName email');
+    const contact = await Contact.findByPk(req.params.id);
+
+    if (!contact) {
+      return res.status(404).json({ message: 'Contact not found' });
+    }
+
+    contact.reply = reply;
+    contact.status = 'replied';
+    contact.repliedAt = new Date();
+    contact.repliedById = req.user.id;
+    await contact.save();
+
+    // Reload with associations
+    const updatedContact = await Contact.findByPk(req.params.id, {
+      include: [{ model: User, as: 'repliedByUser', attributes: ['firstName', 'lastName', 'email'] }]
+    });
 
     res.status(200).json({
       message: 'Reply sent successfully',
-      data: contact
+      data: updatedContact
     });
   } catch (error) {
     res.status(500).json({ message: 'Error sending reply', error: error.message });
@@ -167,11 +177,14 @@ router.put('/:id/status', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
-    const contact = await Contact.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
+    const contact = await Contact.findByPk(req.params.id);
+
+    if (!contact) {
+      return res.status(404).json({ message: 'Contact not found' });
+    }
+
+    contact.status = status;
+    await contact.save();
 
     res.status(200).json({
       message: 'Status updated successfully',
@@ -189,7 +202,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
 
-    await Contact.findByIdAndDelete(req.params.id);
+    await Contact.destroy({ where: { id: req.params.id } });
 
     res.status(200).json({ message: 'Contact deleted successfully' });
   } catch (error) {

@@ -1,8 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const User = require('../models/User');
-const Job = require('../models/Job');
+const { User, Job } = require('../models');
 const auth = require('../middleware/auth');
 const fs = require('fs').promises;
 
@@ -63,7 +62,9 @@ createUploadDirs();
 // @access  Private
 router.get('/profile', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ['password'] }
+    });
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
@@ -91,7 +92,7 @@ router.put(
         userId: req.user.id
       });
 
-      const user = await User.findById(req.user.id);
+      const user = await User.findByPk(req.user.id);
       if (!user) {
         console.log('User not found with id:', req.user.id);
         return res.status(404).json({ msg: 'User not found' });
@@ -164,7 +165,7 @@ router.put(
       });
       await user.save();
       
-      const userResponse = { ...user.toObject() };
+      const userResponse = user.toJSON ? user.toJSON() : { ...user.dataValues };
       delete userResponse.password;
       
       // Add hasProfile flag based on profile completeness
@@ -183,18 +184,23 @@ router.put(
 // @access  Private
 router.get('/saved-jobs', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
-      .populate({
-        path: 'savedJobs',
-        populate: {
-          path: 'company',
-          select: 'name logo location'
-        }
-      });
+    const user = await User.findByPk(req.user.id, {
+      include: [{
+        model: Job,
+        as: 'SavedJobs',
+        attributes: { exclude: ['password'] },
+        through: { attributes: [] },
+        include: [{
+          model: Company,
+          attributes: ['name', 'logo', 'location']
+        }]
+      }]
+    });
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
-    res.json({ savedJobs: user.savedJobs.map(job => job._id) });
+    const savedJobIds = user.SavedJobs ? user.SavedJobs.map(job => job.id) : [];
+    res.json({ savedJobs: savedJobIds });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -209,23 +215,25 @@ router.post('/save-job/:jobId', auth, async (req, res) => {
     const { jobId } = req.params;
     
     // Check if job exists
-    const job = await Job.findById(jobId);
+    const job = await Job.findByPk(jobId);
     if (!job) {
       return res.status(404).json({ msg: 'Job not found' });
     }
     
     // Find user and add job to saved jobs
-    const user = await User.findById(req.user.id);
+    const user = await User.findByPk(req.user.id);
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
     
     // Check if job is already saved
-    if (user.savedJobs.includes(jobId)) {
+    const savedJobs = user.savedJobs || [];
+    if (savedJobs.includes(jobId)) {
       return res.status(400).json({ msg: 'Job already saved' });
     }
     
-    user.savedJobs.push(jobId);
+    savedJobs.push(jobId);
+    user.savedJobs = savedJobs;
     await user.save();
     
     res.json({ msg: 'Job saved successfully', savedJobs: user.savedJobs });
@@ -243,17 +251,18 @@ router.delete('/unsave-job/:jobId', auth, async (req, res) => {
     const { jobId } = req.params;
     
     // Find user and remove job from saved jobs
-    const user = await User.findById(req.user.id);
+    const user = await User.findByPk(req.user.id);
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
     
     // Check if job is saved
-    if (!user.savedJobs.includes(jobId)) {
+    const savedJobs = user.savedJobs || [];
+    if (!savedJobs.includes(jobId)) {
       return res.status(400).json({ msg: 'Job not in saved jobs' });
     }
     
-    user.savedJobs = user.savedJobs.filter(id => id.toString() !== jobId);
+    user.savedJobs = savedJobs.filter(id => id !== jobId);
     await user.save();
     
     res.json({ msg: 'Job removed from saved jobs', savedJobs: user.savedJobs });

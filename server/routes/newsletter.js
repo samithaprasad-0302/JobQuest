@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Newsletter = require('../models/Newsletter');
+const { Newsletter, User } = require('../models');
 const authMiddleware = require('../middleware/auth');
 
 // Subscribe to newsletter
@@ -13,7 +13,9 @@ router.post('/subscribe', async (req, res) => {
     }
 
     // Check if already subscribed
-    const existing = await Newsletter.findOne({ email: email.toLowerCase() });
+    const existing = await Newsletter.findOne({ 
+      where: { email: email.toLowerCase() }
+    });
     if (existing && existing.isActive) {
       return res.status(400).json({ message: 'This email is already subscribed' });
     }
@@ -30,15 +32,14 @@ router.post('/subscribe', async (req, res) => {
     }
 
     // Create new subscription
-    const newsletter = new Newsletter({ email: email.toLowerCase() });
-    await newsletter.save();
+    const newsletter = await Newsletter.create({ email: email.toLowerCase() });
 
     res.status(201).json({ 
       message: 'Successfully subscribed to newsletter',
       data: newsletter 
     });
   } catch (error) {
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'This email is already subscribed' });
     }
     res.status(500).json({ message: 'Error subscribing to newsletter', error: error.message });
@@ -55,8 +56,10 @@ router.get('/subscribers', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
 
-    const subscribers = await Newsletter.find({ isActive: true })
-      .sort({ subscribedAt: -1 });
+    const subscribers = await Newsletter.findAll({ 
+      where: { isActive: true },
+      order: [['subscribedAt', 'DESC']]
+    });
 
     const stats = {
       totalSubscribers: subscribers.length,
@@ -78,7 +81,7 @@ router.get('/subscribers/count', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
 
-    const count = await Newsletter.countDocuments({ isActive: true });
+    const count = await Newsletter.count({ where: { isActive: true } });
 
     res.status(200).json({ count });
   } catch (error) {
@@ -95,7 +98,9 @@ router.post('/unsubscribe', async (req, res) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    const newsletter = await Newsletter.findOne({ email: email.toLowerCase() });
+    const newsletter = await Newsletter.findOne({ 
+      where: { email: email.toLowerCase() }
+    });
 
     if (!newsletter) {
       return res.status(404).json({ message: 'Email not found in subscribers' });
@@ -120,7 +125,7 @@ router.delete('/subscribers/:id', authMiddleware, async (req, res) => {
     }
 
     const { id } = req.params;
-    await Newsletter.findByIdAndDelete(id);
+    await Newsletter.destroy({ where: { id } });
 
     res.status(200).json({ message: 'Subscriber deleted successfully' });
   } catch (error) {

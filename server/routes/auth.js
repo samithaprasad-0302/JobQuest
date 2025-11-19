@@ -2,9 +2,10 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const User = require('../models/User');
+const { User } = require('../models');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
@@ -52,31 +53,33 @@ router.post('/signup', authLimiter, validateSignup, async (req, res) => {
     const { firstName = '', lastName = '', email, password } = req.body;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ 
         message: 'User already exists with this email' 
       });
     }
 
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Create new user
-    const user = new User({
+    const user = await User.create({
       firstName,
       lastName,
       email,
-      password
+      password: hashedPassword
     });
 
-    await user.save();
-
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user.id);
 
     res.status(201).json({
       message: 'User created successfully',
       token,
       user: {
-        id: user._id,
+        id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
@@ -105,7 +108,7 @@ router.post('/signin', authLimiter, validateSignin, async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(400).json({ 
         message: 'Invalid credentials' 
@@ -113,7 +116,7 @@ router.post('/signin', authLimiter, validateSignin, async (req, res) => {
     }
 
     // Check password
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ 
         message: 'Invalid credentials' 
@@ -125,7 +128,7 @@ router.post('/signin', authLimiter, validateSignin, async (req, res) => {
     await user.save();
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user.id);
 
     // Prevent caching of user data
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -179,32 +182,25 @@ router.post('/social', async (req, res) => {
       return res.status(400).json({ message: 'Invalid social provider' });
     }
 
-    // Check if user exists with social ID
-    const socialQuery = {};
-    socialQuery[`socialAuth.${provider}.id`] = socialId;
+    // Check if user exists with email first (easier with Sequelize)
+    let user = await User.findOne({ where: { email } });
     
-    let user = await User.findOne(socialQuery);
-
     if (!user) {
-      // Check if user exists with email
-      user = await User.findOne({ email });
-      
-      if (user) {
-        // Link social account to existing user
-        user.socialAuth[provider] = { id: socialId, email };
-        await user.save();
-      } else {
-        // Create new user
-        const newUser = new User({
-          firstName,
-          lastName,
-          email,
-          socialAuth: {
-            [provider]: { id: socialId, email }
-          }
-        });
-        user = await newUser.save();
-      }
+      // Create new user
+      const socialAuth = {};
+      socialAuth[provider] = { id: socialId, email };
+      user = await User.create({
+        firstName,
+        lastName,
+        email,
+        socialAuth
+      });
+    } else {
+      // Link social account to existing user
+      const socialAuth = user.socialAuth || {};
+      socialAuth[provider] = { id: socialId, email };
+      user.socialAuth = socialAuth;
+      await user.save();
     }
 
     // Update last login
@@ -212,7 +208,7 @@ router.post('/social', async (req, res) => {
     await user.save();
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user.id);
 
     // Prevent caching of user data
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -220,7 +216,7 @@ router.post('/social', async (req, res) => {
     res.set('Expires', '0');
 
     const userData = {
-      id: user._id,
+      id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
@@ -273,14 +269,14 @@ router.get('/me', async (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    const user = await User.findById(decoded.userId).populate('savedJobs appliedJobs.job');
+    const user = await User.findByPk(decoded.userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     const userData = {
-      id: user._id,
+      id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
@@ -319,7 +315,7 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -327,7 +323,7 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
 
     // In a real app, you would send an email here
@@ -350,18 +346,24 @@ router.post('/reset-password', authLimiter, async (req, res) => {
     const { token, password } = req.body;
 
     const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: { [Op.gt]: new Date() }
+      }
     });
 
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired reset token' });
     }
 
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Update password
-    user.password = password;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
     await user.save();
 
     res.json({ message: 'Password reset successful' });

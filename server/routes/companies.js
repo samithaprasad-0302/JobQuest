@@ -1,6 +1,6 @@
 const express = require('express');
-const Company = require('../models/Company');
-const Job = require('../models/Job');
+const { Op } = require('sequelize');
+const { Company, Job } = require('../models');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -20,37 +20,41 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     // Build query
-    const query = { isActive: true };
+    const where = { isActive: true };
 
     if (search) {
-      query.$text = { $search: search };
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } }
+      ];
     }
 
     if (industry) {
-      query.industry = new RegExp(industry, 'i');
+      where.industry = { [Op.like]: `%${industry}%` };
     }
 
     if (size) {
-      query.size = size;
+      where.size = size;
     }
 
     if (featured === 'true') {
-      query.featured = true;
+      where.featured = true;
     }
 
-    const companies = await Company.find(query)
-      .populate('jobs', 'title status')
-      .sort({ featured: -1, createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .exec();
+    const companies = await Company.findAll({
+      where,
+      include: [{ model: Job, attributes: ['title', 'status'] }],
+      order: [['featured', 'DESC'], ['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
 
-    const total = await Company.countDocuments(query);
+    const total = await Company.count({ where });
 
     res.json({
       companies,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
+      totalPages: Math.ceil(total / parseInt(limit)),
+      currentPage: parseInt(page),
       total
     });
   } catch (error) {
@@ -64,13 +68,12 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/featured', async (req, res) => {
   try {
-    const companies = await Company.find({ 
-      isActive: true, 
-      featured: true 
-    })
-    .populate('jobs', 'title status')
-    .sort({ createdAt: -1 })
-    .limit(6);
+    const companies = await Company.findAll({ 
+      where: { isActive: true, featured: true },
+      include: [{ model: Job, attributes: ['title', 'status'] }],
+      order: [['createdAt', 'DESC']],
+      limit: 6
+    });
 
     res.json(companies);
   } catch (error) {
@@ -84,12 +87,14 @@ router.get('/featured', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    const company = await Company.findById(req.params.id)
-      .populate({
-        path: 'jobs',
-        match: { status: 'active' },
-        options: { sort: { createdAt: -1 } }
-      });
+    const company = await Company.findByPk(req.params.id, {
+      include: [{
+        model: Job,
+        where: { status: 'active' },
+        required: false,
+        order: [['createdAt', 'DESC']]
+      }]
+    });
 
     if (!company) {
       return res.status(404).json({ message: 'Company not found' });
@@ -109,24 +114,22 @@ router.get('/:id/jobs', async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    const jobs = await Job.find({ 
-      company: req.params.id, 
-      status: 'active' 
-    })
-    .populate('company', 'name logo')
-    .sort({ createdAt: -1 })
-    .limit(limit * 1)
-    .skip((page - 1) * limit);
+    const jobs = await Job.findAll({ 
+      where: { companyId: req.params.id, status: 'active' },
+      include: [{ model: Company, attributes: ['name', 'logo'] }],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
 
-    const total = await Job.countDocuments({ 
-      company: req.params.id, 
-      status: 'active' 
+    const total = await Job.count({ 
+      where: { companyId: req.params.id, status: 'active' }
     });
 
     res.json({
       jobs,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
+      totalPages: Math.ceil(total / parseInt(limit)),
+      currentPage: parseInt(page),
       total
     });
   } catch (error) {
@@ -140,21 +143,23 @@ router.get('/:id/jobs', async (req, res) => {
 // @access  Private
 router.put('/:id/follow', auth, async (req, res) => {
   try {
-    const company = await Company.findById(req.params.id);
+    const company = await Company.findByPk(req.params.id);
     if (!company) {
       return res.status(404).json({ message: 'Company not found' });
     }
 
-    const userIndex = company.followers.indexOf(req.user.userId);
+    const followers = company.followers || [];
+    const userIndex = followers.indexOf(req.user.id);
 
     if (userIndex > -1) {
       // Unfollow
-      company.followers.splice(userIndex, 1);
+      followers.splice(userIndex, 1);
     } else {
       // Follow
-      company.followers.push(req.user.userId);
+      followers.push(req.user.id);
     }
 
+    company.followers = followers;
     await company.save();
 
     res.json({ 

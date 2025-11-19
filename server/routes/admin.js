@@ -1,57 +1,61 @@
 const express = require('express');
 const router = express.Router();
 const { adminAuth, superAdminAuth } = require('../middleware/adminAuth');
-const User = require('../models/User');
-const Company = require('../models/Company');
-const Job = require('../models/Job');
-const GuestApplication = require('../models/GuestApplication');
+const { User, Company, Job, GuestApplication, Contact, Application } = require('../models');
+const { Op } = require('sequelize');
 
 // Admin Dashboard - Get platform statistics
 router.get('/dashboard', adminAuth, async (req, res) => {
   try {
     // Get user statistics
-    const totalUsers = await User.countDocuments();
-    const activeUsers = await User.countDocuments({ isActive: true });
-    const newUsersThisMonth = await User.countDocuments({
-      createdAt: { $gte: new Date(new Date().setDate(1)) }
+    const totalUsers = await User.count();
+    const activeUsers = await User.count({ where: { isActive: true } });
+    const newUsersThisMonth = await User.count({
+      where: {
+        createdAt: { [Op.gte]: new Date(new Date().setDate(1)) }
+      }
     });
     
     // Get job statistics
-    const totalJobs = await Job.countDocuments();
-    const activeJobs = await Job.countDocuments({ status: 'active' });
-    const pendingJobs = await Job.countDocuments({ status: 'pending' });
+    const totalJobs = await Job.count();
+    const activeJobs = await Job.count({ where: { status: 'active' } });
+    const pendingJobs = await Job.count({ where: { status: 'pending' } });
     
     // Get company statistics
-    const totalCompanies = await Company.countDocuments();
-    const verifiedCompanies = await Company.countDocuments({ isVerified: true });
-    const pendingCompanies = await Company.countDocuments({ isVerified: false });
+    const totalCompanies = await Company.count();
+    const verifiedCompanies = await Company.count({ where: { isVerified: true } });
+    const pendingCompanies = await Company.count({ where: { isVerified: false } });
     
     // Get guest application statistics
-    const totalGuestApplications = await GuestApplication.countDocuments();
-    const pendingGuestApplications = await GuestApplication.countDocuments({ status: 'pending' });
-    const thisMonthGuestApplications = await GuestApplication.countDocuments({
-      appliedAt: { $gte: new Date(new Date().setDate(1)) }
+    const totalGuestApplications = await GuestApplication.count();
+    const pendingGuestApplications = await GuestApplication.count({ where: { status: 'pending' } });
+    const thisMonthGuestApplications = await GuestApplication.count({
+      where: {
+        appliedAt: { [Op.gte]: new Date(new Date().setDate(1)) }
+      }
     });
     
     // Get recent users (last 10)
-    const recentUsers = await User.find()
-      .select('firstName lastName email role createdAt isActive')
-      .sort({ createdAt: -1 })
-      .limit(10);
+    const recentUsers = await User.findAll({
+      attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'createdAt', 'isActive'],
+      order: [['createdAt', 'DESC']],
+      limit: 10
+    });
     
     // Get recent jobs (last 10)
-    const recentJobs = await Job.find()
-      .populate('company', 'name')
-      .select('title company status createdAt')
-      .sort({ createdAt: -1 })
-      .limit(10);
+    const recentJobs = await Job.findAll({
+      include: [{ model: Company, attributes: ['name'] }],
+      attributes: ['id', 'title', 'status', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+      limit: 10
+    });
 
     // Get recent guest applications (last 10)
-    const recentGuestApplications = await GuestApplication.find()
-      .populate('jobId', 'title')
-      .select('firstName lastName email jobTitle companyName status appliedAt')
-      .sort({ appliedAt: -1 })
-      .limit(10);
+    const recentGuestApplications = await GuestApplication.findAll({
+      attributes: ['id', 'guestName', 'guestEmail', 'status', 'appliedAt'],
+      order: [['appliedAt', 'DESC']],
+      limit: 10
+    });
 
     res.json({
       statistics: {
@@ -64,20 +68,17 @@ router.get('/dashboard', adminAuth, async (req, res) => {
         jobs: {
           total: totalJobs,
           active: activeJobs,
-          pending: pendingJobs,
-          expired: totalJobs - activeJobs - pendingJobs
+          pending: pendingJobs
         },
         companies: {
           total: totalCompanies,
           verified: verifiedCompanies,
-          pending: pendingCompanies,
-          unverified: totalCompanies - verifiedCompanies
+          pending: pendingCompanies
         },
         guestApplications: {
           total: totalGuestApplications,
           pending: pendingGuestApplications,
-          newThisMonth: thisMonthGuestApplications,
-          processed: totalGuestApplications - pendingGuestApplications
+          thisMonth: thisMonthGuestApplications
         }
       },
       recentActivity: {
@@ -88,374 +89,380 @@ router.get('/dashboard', adminAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Dashboard error:', error);
-    res.status(500).json({ message: 'Failed to fetch dashboard data' });
+    res.status(500).json({ message: 'Error fetching dashboard data', error: error.message });
   }
 });
 
-// Check admin permissions - returns current user's role and permissions
-router.get('/permissions', adminAuth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id).select('role firstName lastName email');
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json({
-      user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role
-      },
-      permissions: {
-        canChangeRoles: user.role === 'super_admin',
-        canManageUsers: user.role === 'admin' || user.role === 'super_admin',
-        canManageJobs: user.role === 'admin' || user.role === 'super_admin',
-        canManageCompanies: user.role === 'admin' || user.role === 'super_admin'
-      }
-    });
-  } catch (error) {
-    console.error('Permissions check error:', error);
-    res.status(500).json({ message: 'Failed to check permissions' });
-  }
-});
-
-// User Management Routes
-
-// Get all users with pagination and filters
+// Get all users with filters
 router.get('/users', adminAuth, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-    
-    const filters = {};
-    if (req.query.role) filters.role = req.query.role;
-    if (req.query.isActive !== undefined) filters.isActive = req.query.isActive === 'true';
-    if (req.query.isVerified !== undefined) filters.isVerified = req.query.isVerified === 'true';
-    if (req.query.search) {
-      filters.$or = [
-        { firstName: { $regex: req.query.search, $options: 'i' } },
-        { lastName: { $regex: req.query.search, $options: 'i' } },
-        { email: { $regex: req.query.search, $options: 'i' } }
+    const { page = 1, limit = 10, role, search, isActive } = req.query;
+    const offset = (page - 1) * limit;
+
+    let where = {};
+    if (role) where.role = role;
+    if (isActive !== undefined) where.isActive = isActive === 'true';
+    if (search) {
+      where[Op.or] = [
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
       ];
     }
 
-    const users = await User.find(filters)
-      .select('-password -socialAuth')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalUsers = await User.countDocuments(filters);
+    const { count, rows } = await User.findAndCountAll({
+      where,
+      attributes: { exclude: ['password', 'socialAuth'] },
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
 
     res.json({
-      users,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalUsers / limit),
-        totalUsers,
-        limit
-      }
+      total: count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      pages: Math.ceil(count / limit),
+      users: rows
     });
   } catch (error) {
     console.error('Get users error:', error);
-    res.status(500).json({ message: 'Failed to fetch users' });
+    res.status(500).json({ message: 'Error fetching users' });
   }
 });
 
-// Get specific user details
+// Get user details
 router.get('/users/:id', adminAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ['password'] }
+    });
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
     res.json(user);
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ message: 'Failed to fetch user details' });
+    res.status(500).json({ message: 'Error fetching user' });
   }
 });
 
-// Update user status (activate/deactivate)
-router.patch('/users/:id/status', adminAuth, async (req, res) => {
+// Update user
+router.put('/users/:id', superAdminAuth, async (req, res) => {
   try {
-    const { isActive } = req.body;
-    
-    // First find the target user to check their role
-    const targetUser = await User.findById(req.params.id);
-    if (!targetUser) {
-      return res.status(404).json({ message: 'User not found' });
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ message: 'Cannot modify your own account' });
     }
 
-    // Prevent regular admins from modifying super admin accounts
-    if (targetUser.role === 'super_admin' && req.user.role !== 'super_admin') {
-      return res.status(403).json({ 
-        message: 'Access denied. Cannot modify super administrator accounts.' 
-      });
-    }
-
-    // Prevent changing your own status to avoid lockout
-    if (req.params.id === req.user._id.toString()) {
-      return res.status(400).json({ 
-        message: 'Cannot change your own account status to prevent lockout' 
-      });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { isActive },
-      { new: true }
-    ).select('-password');
-
-    res.json({
-      message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
-      user
-    });
-  } catch (error) {
-    console.error('Update user status error:', error);
-    res.status(500).json({ message: 'Failed to update user status' });
-  }
-});
-
-// Update user role - Only super admin can change roles
-router.patch('/users/:id/role', superAdminAuth, async (req, res) => {
-  try {
-    const { role } = req.body;
-    
-    if (!['user', 'employer', 'admin', 'super_admin'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role' });
-    }
-
-    // Prevent changing your own role to avoid lockout
-    if (req.params.id === req.user._id.toString()) {
-      return res.status(400).json({ 
-        message: 'Cannot change your own role to prevent lockout' 
-      });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { role },
-      { new: true }
-    ).select('-password');
-
+    const user = await User.findByPk(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({
-      message: 'User role updated successfully',
-      user
+    await user.update(req.body, {
+      attributes: { exclude: ['password'] }
     });
+
+    res.json({ message: 'User updated successfully', user });
   } catch (error) {
-    console.error('Update user role error:', error);
-    res.status(500).json({ message: 'Failed to update user role' });
+    console.error('Update user error:', error);
+    res.status(500).json({ message: 'Error updating user' });
   }
 });
 
-// Job Management Routes
+// Delete user
+router.delete('/users/:id', superAdminAuth, async (req, res) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ message: 'Cannot delete your own account' });
+    }
 
-// Get all jobs with pagination and filters
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await user.destroy();
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Error deleting user' });
+  }
+});
+
+// Get all jobs with filters
 router.get('/jobs', adminAuth, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-    
-    const filters = {};
-    if (req.query.status) filters.status = req.query.status;
-    if (req.query.jobType) filters.jobType = req.query.jobType;
-    if (req.query.experienceLevel) filters.experienceLevel = req.query.experienceLevel;
-    if (req.query.search) {
-      filters.$or = [
-        { title: { $regex: req.query.search, $options: 'i' } },
-        { description: { $regex: req.query.search, $options: 'i' } }
+    const { page = 1, limit = 10, status, search, company } = req.query;
+    const offset = (page - 1) * limit;
+
+    let where = {};
+    if (status) where.status = status;
+    if (company) where.companyId = company;
+    if (search) {
+      where[Op.or] = [
+        { title: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } }
       ];
     }
 
-    const jobs = await Job.find(filters)
-      .populate('company', 'name logo industry')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalJobs = await Job.countDocuments(filters);
+    const { count, rows } = await Job.findAndCountAll({
+      where,
+      include: [{ model: Company, attributes: ['id', 'name', 'logo', 'industry'] }],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
 
     res.json({
-      jobs,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalJobs / limit),
-        totalJobs,
-        limit
-      }
+      total: count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      pages: Math.ceil(count / limit),
+      jobs: rows
     });
   } catch (error) {
     console.error('Get jobs error:', error);
-    res.status(500).json({ message: 'Failed to fetch jobs' });
+    res.status(500).json({ message: 'Error fetching jobs' });
   }
 });
 
-// Update job status (approve/reject)
-router.patch('/jobs/:id/status', adminAuth, async (req, res) => {
+// Get job details
+router.get('/jobs/:id', adminAuth, async (req, res) => {
   try {
-    const { status } = req.body;
-    
-    if (!['pending', 'active', 'rejected', 'expired'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-    }
-
-    const job = await Job.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    ).populate('company', 'name');
+    const job = await Job.findByPk(req.params.id, {
+      include: [{ model: Company, attributes: ['name'] }]
+    });
 
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
     }
 
-    res.json({
-      message: `Job ${status} successfully`,
-      job
-    });
+    res.json(job);
   } catch (error) {
-    console.error('Update job status error:', error);
-    res.status(500).json({ message: 'Failed to update job status' });
+    console.error('Get job error:', error);
+    res.status(500).json({ message: 'Error fetching job' });
   }
 });
 
-// Company Management Routes
+// Update job status
+router.put('/jobs/:id', adminAuth, async (req, res) => {
+  try {
+    const job = await Job.findByPk(req.params.id);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
 
-// Get all companies with pagination and filters
+    await job.update(req.body);
+    res.json({ message: 'Job updated successfully', job });
+  } catch (error) {
+    console.error('Update job error:', error);
+    res.status(500).json({ message: 'Error updating job' });
+  }
+});
+
+// Delete job
+router.delete('/jobs/:id', adminAuth, async (req, res) => {
+  try {
+    const job = await Job.findByPk(req.params.id);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    await job.destroy();
+    res.json({ message: 'Job deleted successfully' });
+  } catch (error) {
+    console.error('Delete job error:', error);
+    res.status(500).json({ message: 'Error deleting job' });
+  }
+});
+
+// Get all companies with filters
 router.get('/companies', adminAuth, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-    
-    const filters = {};
-    if (req.query.isVerified !== undefined) filters.isVerified = req.query.isVerified === 'true';
-    if (req.query.industry) filters.industry = req.query.industry;
-    if (req.query.search) {
-      filters.$or = [
-        { name: { $regex: req.query.search, $options: 'i' } },
-        { industry: { $regex: req.query.search, $options: 'i' } }
+    const { page = 1, limit = 10, isVerified, search } = req.query;
+    const offset = (page - 1) * limit;
+
+    let where = {};
+    if (isVerified !== undefined) where.isVerified = isVerified === 'true';
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { industry: { [Op.like]: `%${search}%` } }
       ];
     }
 
-    const companies = await Company.find(filters)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalCompanies = await Company.countDocuments(filters);
+    const { count, rows } = await Company.findAndCountAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
 
     res.json({
-      companies,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalCompanies / limit),
-        totalCompanies,
-        limit
-      }
+      total: count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      pages: Math.ceil(count / limit),
+      companies: rows
     });
   } catch (error) {
     console.error('Get companies error:', error);
-    res.status(500).json({ message: 'Failed to fetch companies' });
+    res.status(500).json({ message: 'Error fetching companies' });
   }
 });
 
-// Update company verification status
-router.patch('/companies/:id/verify', adminAuth, async (req, res) => {
+// Get company details
+router.get('/companies/:id', adminAuth, async (req, res) => {
   try {
-    const { isVerified } = req.body;
-    const company = await Company.findByIdAndUpdate(
-      req.params.id,
-      { isVerified },
-      { new: true }
-    );
+    const company = await Company.findByPk(req.params.id);
 
     if (!company) {
       return res.status(404).json({ message: 'Company not found' });
     }
 
-    res.json({
-      message: `Company ${isVerified ? 'verified' : 'unverified'} successfully`,
-      company
-    });
+    res.json(company);
   } catch (error) {
-    console.error('Update company verification error:', error);
-    res.status(500).json({ message: 'Failed to update company verification' });
+    console.error('Get company error:', error);
+    res.status(500).json({ message: 'Error fetching company' });
   }
 });
 
-// Guest Application Management Routes
+// Verify/Unverify company
+router.put('/companies/:id/verify', superAdminAuth, async (req, res) => {
+  try {
+    const company = await Company.findByPk(req.params.id);
+    if (!company) {
+      return res.status(404).json({ message: 'Company not found' });
+    }
 
-// Get all guest applications with pagination and filters
+    company.isVerified = req.body.isVerified;
+    await company.save();
+
+    res.json({ message: 'Company status updated', company });
+  } catch (error) {
+    console.error('Verify company error:', error);
+    res.status(500).json({ message: 'Error verifying company' });
+  }
+});
+
+// Delete company
+router.delete('/companies/:id', superAdminAuth, async (req, res) => {
+  try {
+    const company = await Company.findByPk(req.params.id);
+    if (!company) {
+      return res.status(404).json({ message: 'Company not found' });
+    }
+
+    await company.destroy();
+    res.json({ message: 'Company deleted successfully' });
+  } catch (error) {
+    console.error('Delete company error:', error);
+    res.status(500).json({ message: 'Error deleting company' });
+  }
+});
+
+// Get all guest applications with filters
 router.get('/guest-applications', adminAuth, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-    
-    const filters = {};
-    if (req.query.status) filters.status = req.query.status;
-    if (req.query.search) {
-      filters.$or = [
-        { firstName: { $regex: req.query.search, $options: 'i' } },
-        { lastName: { $regex: req.query.search, $options: 'i' } },
-        { email: { $regex: req.query.search, $options: 'i' } },
-        { jobTitle: { $regex: req.query.search, $options: 'i' } },
-        { companyName: { $regex: req.query.search, $options: 'i' } }
+    const { page = 1, limit = 10, status, search } = req.query;
+    const offset = (page - 1) * limit;
+
+    let where = {};
+    if (status) where.status = status;
+    if (search) {
+      where[Op.or] = [
+        { guestEmail: { [Op.like]: `%${search}%` } },
+        { guestName: { [Op.like]: `%${search}%` } }
       ];
     }
 
-    const applications = await GuestApplication.find(filters)
-      .populate('jobId', 'title status')
-      .sort({ appliedAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalApplications = await GuestApplication.countDocuments(filters);
+    const { count, rows } = await GuestApplication.findAndCountAll({
+      where,
+      order: [['appliedAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
 
     res.json({
-      applications,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalApplications / limit),
-        totalItems: totalApplications,
-        itemsPerPage: limit
-      }
+      total: count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      pages: Math.ceil(count / limit),
+      applications: rows
     });
   } catch (error) {
-    console.error('Get guest applications error:', error);
-    res.status(500).json({ message: 'Failed to fetch guest applications' });
+    console.error('Get applications error:', error);
+    res.status(500).json({ message: 'Error fetching applications' });
   }
 });
 
-// Get guest application statistics
-router.get('/guest-applications/stats', adminAuth, async (req, res) => {
+// Get guest application details
+router.get('/guest-applications/:id', adminAuth, async (req, res) => {
   try {
-    const total = await GuestApplication.countDocuments();
-    const pending = await GuestApplication.countDocuments({ status: 'pending' });
-    const reviewed = await GuestApplication.countDocuments({ status: 'reviewed' });
-    const accepted = await GuestApplication.countDocuments({ status: 'accepted' });
-    const rejected = await GuestApplication.countDocuments({ status: 'rejected' });
+    const app = await GuestApplication.findByPk(req.params.id);
 
-    // Get applications from last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentApplications = await GuestApplication.countDocuments({
-      appliedAt: { $gte: thirtyDaysAgo }
+    if (!app) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    res.json(app);
+  } catch (error) {
+    console.error('Get application error:', error);
+    res.status(500).json({ message: 'Error fetching application' });
+  }
+});
+
+// Update guest application status
+router.put('/guest-applications/:id', adminAuth, async (req, res) => {
+  try {
+    const app = await GuestApplication.findByPk(req.params.id);
+    if (!app) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    app.status = req.body.status;
+    await app.save();
+
+    res.json({ message: 'Application updated', application: app });
+  } catch (error) {
+    console.error('Update application error:', error);
+    res.status(500).json({ message: 'Error updating application' });
+  }
+});
+
+// Delete guest application
+router.delete('/guest-applications/:id', adminAuth, async (req, res) => {
+  try {
+    const app = await GuestApplication.findByPk(req.params.id);
+    if (!app) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    await app.destroy();
+    res.json({ message: 'Application deleted successfully' });
+  } catch (error) {
+    console.error('Delete application error:', error);
+    res.status(500).json({ message: 'Error deleting application' });
+  }
+});
+
+// Get application statistics
+router.get('/statistics/applications', adminAuth, async (req, res) => {
+  try {
+    const total = await GuestApplication.count();
+    const pending = await GuestApplication.count({ where: { status: 'pending' } });
+    const reviewed = await GuestApplication.count({ where: { status: 'reviewed' } });
+    const accepted = await GuestApplication.count({ where: { status: 'accepted' } });
+    const rejected = await GuestApplication.count({ where: { status: 'rejected' } });
+
+    const recentApplications = await GuestApplication.count({
+      where: {
+        appliedAt: { [Op.gte]: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000) }
+      }
     });
-
-    // Get unique applicants count
-    const uniqueApplicants = await GuestApplication.distinct('email').length;
 
     res.json({
       total,
@@ -463,129 +470,47 @@ router.get('/guest-applications/stats', adminAuth, async (req, res) => {
       reviewed,
       accepted,
       rejected,
-      recentApplications,
-      uniqueApplicants
+      recentApplicationsLastWeek: recentApplications
     });
   } catch (error) {
-    console.error('Get guest application stats error:', error);
-    res.status(500).json({ message: 'Failed to fetch guest application statistics' });
+    console.error('Statistics error:', error);
+    res.status(500).json({ message: 'Error fetching statistics' });
   }
 });
 
-// Update guest application status
-router.put('/guest-applications/:id/status', adminAuth, async (req, res) => {
+// Get all contacts
+router.get('/contacts', adminAuth, async (req, res) => {
   try {
-    const { status, notes } = req.body;
-    const reviewerId = req.user.id;
+    const { page = 1, limit = 10, status, search } = req.query;
+    const offset = (page - 1) * limit;
 
-    if (!['pending', 'reviewed', 'rejected', 'accepted'].includes(status)) {
-      return res.status(400).json({ 
-        message: 'Invalid status. Must be pending, reviewed, rejected, or accepted' 
-      });
+    let where = {};
+    if (status) where.status = status;
+    if (search) {
+      where[Op.or] = [
+        { email: { [Op.like]: `%${search}%` } },
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } }
+      ];
     }
 
-    const application = await GuestApplication.findById(req.params.id);
-    if (!application) {
-      return res.status(404).json({ message: 'Guest application not found' });
-    }
-
-    await application.markAsReviewed(reviewerId, status, notes);
+    const { count, rows } = await Contact.findAndCountAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
 
     res.json({
-      message: 'Application status updated successfully',
-      application
+      total: count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      pages: Math.ceil(count / limit),
+      contacts: rows
     });
   } catch (error) {
-    console.error('Update guest application status error:', error);
-    res.status(500).json({ message: 'Failed to update application status' });
-  }
-});
-
-// Delete guest application
-router.delete('/guest-applications/:id', adminAuth, async (req, res) => {
-  try {
-    const application = await GuestApplication.findByIdAndDelete(req.params.id);
-    if (!application) {
-      return res.status(404).json({ message: 'Guest application not found' });
-    }
-
-    res.json({
-      message: 'Guest application deleted successfully',
-      application
-    });
-  } catch (error) {
-    console.error('Delete guest application error:', error);
-    res.status(500).json({ message: 'Failed to delete guest application' });
-  }
-});
-
-// Export guest applications as CSV
-router.get('/guest-applications/export/csv', adminAuth, async (req, res) => {
-  try {
-    // Fetch all guest applications without pagination
-    const applications = await GuestApplication.find({})
-      .populate('jobId', 'title status')
-      .sort({ appliedAt: -1 });
-
-    // Define CSV headers
-    const csvHeaders = [
-      'Application ID',
-      'First Name',
-      'Last Name',
-      'Email',
-      'Phone',
-      'Job Title',
-      'Company Name',
-      'Job ID',
-      'Job Status',
-      'Application Status',
-      'Applied Date',
-      'Cover Letter',
-      'IP Address',
-      'User Agent',
-      'Reviewed Date',
-      'Admin Notes'
-    ];
-
-    // Generate CSV rows
-    const csvRows = applications.map(app => [
-      app._id,
-      app.firstName || '',
-      app.lastName || '',
-      app.email || '',
-      app.phone || '',
-      app.jobTitle || '',
-      app.companyName || '',
-      app.jobId?._id || '',
-      app.jobId?.status || '',
-      app.status || '',
-      app.appliedAt ? new Date(app.appliedAt).toISOString().split('T')[0] : '',
-      app.coverLetter ? `"${app.coverLetter.replace(/"/g, '""')}"` : '', // Escape quotes in CSV
-      app.ipAddress || '',
-      app.userAgent ? `"${app.userAgent.replace(/"/g, '""')}"` : '', // Escape quotes in CSV
-      app.reviewedAt ? new Date(app.reviewedAt).toISOString().split('T')[0] : '',
-      app.adminNotes ? `"${app.adminNotes.replace(/"/g, '""')}"` : '' // Escape quotes in CSV
-    ]);
-
-    // Combine headers and rows
-    const csvContent = [csvHeaders, ...csvRows]
-      .map(row => row.join(','))
-      .join('\n');
-
-    // Set response headers for CSV download
-    const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `guest-applications-${timestamp}.csv`;
-    
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Pragma', 'no-cache');
-
-    res.send(csvContent);
-
-  } catch (error) {
-    console.error('Export guest applications CSV error:', error);
-    res.status(500).json({ message: 'Failed to export guest applications data' });
+    console.error('Get contacts error:', error);
+    res.status(500).json({ message: 'Error fetching contacts' });
   }
 });
 

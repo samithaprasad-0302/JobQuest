@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Application = require('../models/Application');
-const Job = require('../models/Job');
+const { Application, Job, User, Company } = require('../models');
 const auth = require('../middleware/auth');
 
 // Create a new application
@@ -17,30 +16,34 @@ router.post('/', auth, async (req, res) => {
     }
     
     // Get job details
-    const job = await Job.findById(jobId).populate('company', 'name');
+    const job = await Job.findByPk(jobId, {
+      include: [{ model: Company, attributes: ['name'] }]
+    });
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
     }
     
     // Check if user already applied for this job
     const existingApplication = await Application.findOne({
-      userId: req.user.id,
-      jobId: jobId
+      where: {
+        userId: req.user.id,
+        jobId: jobId
+      }
     });
     
     if (existingApplication) {
       return res.status(409).json({ 
         error: 'You have already applied for this job',
-        applicationId: existingApplication._id
+        applicationId: existingApplication.id
       });
     }
     
     // Create new application
-    const application = new Application({
+    const application = await Application.create({
       userId: req.user.id,
       jobId: jobId,
       jobTitle: job.title,
-      companyName: job.company?.name || job.companyName,
+      companyName: job.Company?.name || job.companyName,
       applicationMethod: applicationMethod,
       contactEmail: contactEmail,
       emailSubject: emailSubject,
@@ -48,24 +51,24 @@ router.post('/', auth, async (req, res) => {
       notes: notes
     });
     
-    await application.save();
-    
     // Populate the job details for response
-    await application.populate([
-      { path: 'jobId', select: 'title company location salary jobType' },
-      { path: 'userId', select: 'firstName lastName email' }
-    ]);
+    const populatedApp = await Application.findByPk(application.id, {
+      include: [
+        { model: Job, attributes: ['title', 'company', 'location', 'salary', 'jobType'] },
+        { model: User, attributes: ['firstName', 'lastName', 'email'] }
+      ]
+    });
     
     res.status(201).json({
       message: 'Application submitted successfully',
-      application: application
+      application: populatedApp
     });
     
   } catch (error) {
     console.error('Error creating application:', error);
     
     // Handle duplicate key error
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ 
         error: 'You have already applied for this job' 
       });
@@ -93,30 +96,41 @@ router.get('/', auth, async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     // Build sort object
-    const sort = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    const order = [];
+    if (sortBy) {
+      order.push([sortBy, sortOrder === 'desc' ? 'DESC' : 'ASC']);
+    }
     
     // Get applications with job details
-    const applications = await Application.find(query)
-      .populate([
-        { 
-          path: 'jobId', 
-          select: 'title company location salary jobType category isRemote createdAt',
-          populate: {
-            path: 'company',
-            select: 'name logo'
-          }
-        }
-      ])
-      .sort(sort)
-      .skip(skip)
-      .limit(parseInt(limit));
+    const applications = await Application.findAll({
+      where: { userId: req.user.id, ...(status && status !== 'all' ? { status } : {}) },
+      include: [{
+        model: Job,
+        attributes: ['title', 'company', 'location', 'salary', 'jobType', 'category', 'isRemote', 'createdAt'],
+        include: [{
+          model: Company,
+          attributes: ['name', 'logo']
+        }]
+      }],
+      order: order.length > 0 ? order : [['appliedAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
     
     // Get total count for pagination
-    const totalApplications = await Application.countDocuments(query);
+    const totalApplications = await Application.count({
+      where: { userId: req.user.id, ...(status && status !== 'all' ? { status } : {}) }
+    });
     
     // Get user statistics
-    const stats = await Application.getUserStats(req.user.id);
+    const stats = {
+      total: totalApplications,
+      applied: await Application.count({ where: { userId: req.user.id, status: 'applied' } }),
+      under_review: await Application.count({ where: { userId: req.user.id, status: 'under_review' } }),
+      interview_scheduled: await Application.count({ where: { userId: req.user.id, status: 'interview_scheduled' } }),
+      offered: await Application.count({ where: { userId: req.user.id, status: 'offered' } }),
+      rejected: await Application.count({ where: { userId: req.user.id, status: 'rejected' } })
+    };
     
     res.json({
       applications: applications,
@@ -124,7 +138,7 @@ router.get('/', auth, async (req, res) => {
         currentPage: parseInt(page),
         totalPages: Math.ceil(totalApplications / parseInt(limit)),
         totalApplications: totalApplications,
-        hasNext: skip + applications.length < totalApplications,
+        hasNext: (parseInt(page) - 1) * parseInt(limit) + applications.length < totalApplications,
         hasPrev: parseInt(page) > 1
       },
       statistics: stats
@@ -143,19 +157,22 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const application = await Application.findOne({
-      _id: req.params.id,
-      userId: req.user.id // Ensure user can only access their own applications
-    }).populate([
-      { 
-        path: 'jobId', 
-        select: 'title company location salary jobType category isRemote description requirements benefits',
-        populate: {
-          path: 'company',
-          select: 'name logo website'
-        }
+      where: {
+        id: req.params.id,
+        userId: req.user.id // Ensure user can only access their own applications
       },
-      { path: 'userId', select: 'firstName lastName email' }
-    ]);
+      include: [
+        { 
+          model: Job,
+          attributes: ['title', 'company', 'location', 'salary', 'jobType', 'category', 'isRemote', 'description', 'requirements', 'benefits'],
+          include: [{
+            model: Company,
+            attributes: ['name', 'logo', 'website']
+          }]
+        },
+        { model: User, attributes: ['firstName', 'lastName', 'email'] }
+      ]
+    });
     
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
@@ -186,8 +203,10 @@ router.put('/:id', auth, async (req, res) => {
     }
     
     const application = await Application.findOne({
-      _id: req.params.id,
-      userId: req.user.id // Ensure user can only update their own applications
+      where: {
+        id: req.params.id,
+        userId: req.user.id // Ensure user can only update their own applications
+      }
     });
     
     if (!application) {
@@ -202,20 +221,22 @@ router.put('/:id', auth, async (req, res) => {
     await application.save();
     
     // Populate for response
-    await application.populate([
-      { 
-        path: 'jobId', 
-        select: 'title company location salary jobType',
-        populate: {
-          path: 'company',
-          select: 'name logo'
+    const updatedApp = await Application.findByPk(application.id, {
+      include: [
+        { 
+          model: Job,
+          attributes: ['title', 'company', 'location', 'salary', 'jobType'],
+          include: [{
+            model: Company,
+            attributes: ['name', 'logo']
+          }]
         }
-      }
-    ]);
+      ]
+    });
     
     res.json({
       message: 'Application updated successfully',
-      application: application
+      application: updatedApp
     });
     
   } catch (error) {
@@ -231,15 +252,17 @@ router.put('/:id', auth, async (req, res) => {
 router.delete('/:id', auth, async (req, res) => {
   try {
     const application = await Application.findOne({
-      _id: req.params.id,
-      userId: req.user.id // Ensure user can only delete their own applications
+      where: {
+        id: req.params.id,
+        userId: req.user.id // Ensure user can only delete their own applications
+      }
     });
     
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
     }
     
-    await Application.findByIdAndDelete(req.params.id);
+    await Application.destroy({ where: { id: req.params.id } });
     
     res.json({ message: 'Application deleted successfully' });
     
@@ -255,13 +278,22 @@ router.delete('/:id', auth, async (req, res) => {
 // Get application statistics for the user
 router.get('/stats/summary', auth, async (req, res) => {
   try {
-    const stats = await Application.getUserStats(req.user.id);
+    const stats = {
+      total: await Application.count({ where: { userId: req.user.id } }),
+      applied: await Application.count({ where: { userId: req.user.id, status: 'applied' } }),
+      under_review: await Application.count({ where: { userId: req.user.id, status: 'under_review' } }),
+      interview_scheduled: await Application.count({ where: { userId: req.user.id, status: 'interview_scheduled' } }),
+      offered: await Application.count({ where: { userId: req.user.id, status: 'offered' } }),
+      rejected: await Application.count({ where: { userId: req.user.id, status: 'rejected' } })
+    };
     
     // Get recent applications (last 5)
-    const recentApplications = await Application.find({ userId: req.user.id })
-      .populate('jobId', 'title company')
-      .sort({ appliedAt: -1 })
-      .limit(5);
+    const recentApplications = await Application.findAll({
+      where: { userId: req.user.id },
+      include: [{ model: Job, attributes: ['title', 'company'] }],
+      order: [['appliedAt', 'DESC']],
+      limit: 5
+    });
     
     res.json({
       statistics: stats,

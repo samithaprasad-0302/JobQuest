@@ -5,6 +5,7 @@ const Job = require('./Job');
 const Contact = require('./Contact');
 const Application = require('./Application');
 const Newsletter = require('./Newsletter');
+const GuestApplication = require('./GuestApplication');
 
 // Define associations
 User.hasMany(Application, { foreignKey: 'userId' });
@@ -26,5 +27,6 @@ module.exports = {
   Job,
   Contact,
   Application,
-  Newsletter
+  Newsletter,
+  GuestApplication
 };

@@ -91,11 +91,11 @@ initializeDatabase();
 process.on('SIGTERM', async () => {
   console.log('📝 Received SIGTERM, gracefully shutting down...');
   try {
-    await mongoose.connection.close();
-    console.log('✅ MongoDB connection closed through app termination');
+    await sequelize.close();
+    console.log('✅ Database connection closed through app termination');
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error closing MongoDB connection:', error);
+    console.error('❌ Error closing database connection:', error);
     process.exit(1);
   }
 });
@@ -111,64 +111,6 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
   process.exit(1);
 });
-
-// Initialize database connection
-connectToDatabase();
-
-// Database health monitoring
-setInterval(async () => {
-  try {
-    // Check connection state
-    const state = mongoose.connection.readyState;
-    
-    if (state !== 1) { // 1 = connected
-      console.log(`🔍 Database connection check - State: ${getConnectionState(state)}`);
-      
-      if (state === 0) { // 0 = disconnected
-        console.log('🔄 Database disconnected, attempting to reconnect...');
-        await connectToDatabase();
-      }
-    } else {
-      // Ping database to ensure it's responding
-      await mongoose.connection.db.admin().ping();
-      console.log('💚 Database health check passed');
-    }
-  } catch (error) {
-    console.error('❌ Database health check error:', error.message);
-    if (mongoose.connection.readyState === 0) {
-      console.log('🔄 Health check failed, attempting to reconnect...');
-      await connectToDatabase();
-    }
-  }
-}, 60000); // Check every 60 seconds
-
-// Helper function to get readable connection state
-const getConnectionState = (state) => {
-  const states = {
-    0: 'disconnected',
-    1: 'connected',
-    2: 'connecting',
-    3: 'disconnecting'
-  };
-  return states[state] || 'unknown';
-};
-
-// Middleware to check database connection
-const checkDbConnection = (req, res, next) => {
-  if (mongoose.connection.readyState === 1) {
-    next();
-  } else {
-    console.log('⚠️  Database not connected, attempting to reconnect...');
-    connectToDatabase();
-    res.status(503).json({ 
-      message: 'Database temporarily unavailable. Please try again.',
-      status: 'DB_DISCONNECTED'
-    });
-  }
-};
-
-// Apply database check middleware to API routes
-app.use('/api', checkDbConnection);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -186,7 +128,7 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+    database: sequelize.authenticate() ? 'Connected' : 'Disconnected'
   });
 });
 
