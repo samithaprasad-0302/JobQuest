@@ -32,6 +32,10 @@ const Contact = sequelize.define('Contact', {
     type: DataTypes.ENUM('new', 'read', 'replied', 'closed'),
     defaultValue: 'new'
   },
+  submittedAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  },
   replies: {
     type: DataTypes.JSON,
     defaultValue: []
