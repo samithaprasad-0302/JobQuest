@@ -305,7 +305,7 @@ router.post('/admin', adminAuth[0], adminAuth[1], upload.single('jobImage'), asy
       applicationDeadline: applicationDeadline || null,
       tags: parsedTags,
       link: link || null,
-      postedById: req.user.id,
+      postedBy: req.user.id,
       status: 'active'
     };
 
@@ -606,7 +606,7 @@ router.post('/', auth, async (req, res) => {
       category,
       applicationDeadline,
       tags,
-      postedById: req.user.id
+      postedBy: req.user.id
     });
 
     const populatedJob = await Job.findByPk(job.id, {
