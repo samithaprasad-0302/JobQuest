@@ -45,7 +45,7 @@ interface DashboardStats {
 
 interface RecentActivity {
   users: Array<{
-    _id: string;
+    id: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -54,22 +54,18 @@ interface RecentActivity {
     isActive: boolean;
   }>;
   jobs: Array<{
-    _id: string;
+    id: string;
     title: string;
-    company: {
-      _id: string;
+    Company?: {
       name: string;
     };
     status: string;
     createdAt: string;
   }>;
   guestApplications: Array<{
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    jobTitle: string;
-    companyName: string;
+    id: string;
+    guestName: string;
+    guestEmail: string;
     status: string;
     appliedAt: string;
   }>;
@@ -80,8 +76,7 @@ interface AdminDashboardProps {
 }
 
 interface Contact {
-  _id?: string;
-  id?: string;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -330,7 +325,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
           </h3>
           <div className="space-y-2">
             {recentActivity?.users.slice(0, 5).map((user) => (
-              <div key={user._id || user.id} className="flex items-center justify-between gap-2">
+              <div key={user.id} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-medium text-xs">
@@ -381,13 +376,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
           </h3>
           <div className="space-y-2">
             {recentActivity?.jobs.slice(0, 5).map((job) => (
-              <div key={job._id || job.id} className="flex items-center justify-between">
+              <div key={job.id} className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className={`font-medium text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     {job.title}
                   </p>
                   <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {job.company?.name || 'Unknown Company'}
+                    {job.Company?.name || 'Unknown Company'}
                   </p>
                 </div>
                 <div className="text-right">
@@ -425,19 +420,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
           </h3>
           <div className="space-y-2">
             {recentActivity?.guestApplications?.slice(0, 5).map((application) => (
-              <div key={application._id || application.id} className="flex items-center justify-between gap-2">
+              <div key={application.id} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className="w-7 h-7 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-medium text-xs">
-                      {application.firstName?.charAt(0) || 'G'}{application.lastName?.charAt(0) || 'A'}
+                      {application.guestName?.charAt(0) || 'G'}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className={`font-medium text-xs truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {application.firstName} {application.lastName}
+                      {application.guestName}
                     </p>
                     <p className={`text-xs truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Applied for {application.jobTitle} at {application.companyName}
+                      {application.guestEmail}
                     </p>
                   </div>
                 </div>
@@ -567,9 +562,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {contacts.map((contact) => (
               <div
-                key={contact._id || contact.id}
+                key={contact.id}
                 className={`p-2 rounded border cursor-pointer transition-colors ${
-                  selectedContact?._id === contact._id
+                  selectedContact?.id === contact.id
                     ? darkMode
                       ? 'bg-blue-900/20 border-blue-700'
                       : 'bg-blue-50 border-blue-300'
@@ -672,9 +667,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
                     Send Reply:
                   </label>
                   <textarea
-                    value={replyingTo === selectedContact._id ? replyText : ''}
+                    value={replyingTo === selectedContact.id ? replyText : ''}
                     onChange={(e) => setReplyText(e.target.value)}
-                    onClick={() => setReplyingTo(selectedContact._id)}
+                    onClick={() => setReplyingTo(selectedContact.id)}
                     placeholder="Type your reply..."
                     className={`w-full px-2 py-1 rounded text-xs border ${
                       darkMode
@@ -683,7 +678,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
                     } focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none`}
                     rows={3}
                   />
-                  {replyingTo === selectedContact._id && (
+                  {replyingTo === selectedContact.id && (
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={async () => {
@@ -692,7 +687,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
                             return;
                           }
                           try {
-                            await contactAPI.replyToContact(selectedContact._id, replyText);
+                            await contactAPI.replyToContact(selectedContact.id, replyText);
                             setSelectedContact({
                               ...selectedContact,
                               reply: replyText,
@@ -702,7 +697,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
                             setReplyingTo(null);
                             // Update contacts list
                             setContacts(contacts.map(c =>
-                              c._id === selectedContact._id
+                              c.id === selectedContact.id
                                 ? { ...c, reply: replyText, status: 'replied' }
                                 : c
                             ));
@@ -739,8 +734,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
                   onClick={async () => {
                     if (confirm('Delete this message?')) {
                       try {
-                        await contactAPI.deleteContact(selectedContact._id);
-                        setContacts(contacts.filter(c => c._id !== selectedContact._id));
+                        await contactAPI.deleteContact(selectedContact.id);
+                        setContacts(contacts.filter(c => c.id !== selectedContact.id));
                         setSelectedContact(null);
                       } catch (err) {
                         alert('Failed to delete message');
@@ -758,13 +753,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
                   onChange={async (e) => {
                     const newStatus = e.target.value;
                     try {
-                      await contactAPI.updateContactStatus(selectedContact._id, newStatus);
+                      await contactAPI.updateContactStatus(selectedContact.id, newStatus);
                       setSelectedContact({
                         ...selectedContact,
                         status: newStatus as Contact['status']
                       });
                       setContacts(contacts.map(c =>
-                        c._id === selectedContact._id
+                        c.id === selectedContact.id
                           ? { ...c, status: newStatus as Contact['status'] }
                           : c
                       ));
