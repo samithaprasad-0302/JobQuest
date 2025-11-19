@@ -80,7 +80,8 @@ interface AdminDashboardProps {
 }
 
 interface Contact {
-  _id: string;
+  _id?: string;
+  id?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -89,7 +90,7 @@ interface Contact {
   message: string;
   status: 'new' | 'read' | 'replied' | 'closed';
   reply?: string;
-  submittedAt: string;
+  createdAt: string;
   repliedAt?: string;
 }
 
@@ -329,7 +330,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
           </h3>
           <div className="space-y-2">
             {recentActivity?.users.slice(0, 5).map((user) => (
-              <div key={user._id} className="flex items-center justify-between gap-2">
+              <div key={user._id || user.id} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-medium text-xs">
@@ -380,13 +381,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
           </h3>
           <div className="space-y-2">
             {recentActivity?.jobs.slice(0, 5).map((job) => (
-              <div key={job._id} className="flex items-center justify-between">
+              <div key={job._id || job.id} className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className={`font-medium text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     {job.title}
                   </p>
                   <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {job.company.name}
+                    {job.company?.name || 'Unknown Company'}
                   </p>
                 </div>
                 <div className="text-right">
@@ -424,7 +425,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
           </h3>
           <div className="space-y-2">
             {recentActivity?.guestApplications?.slice(0, 5).map((application) => (
-              <div key={application._id} className="flex items-center justify-between gap-2">
+              <div key={application._id || application.id} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className="w-7 h-7 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-medium text-xs">
@@ -484,13 +485,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
         ) : subscribers.length > 0 ? (
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {subscribers.slice(0, 10).map((subscriber) => (
-              <div key={subscriber._id} className="flex items-center justify-between gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              <div key={subscriber._id || subscriber.id} className="flex items-center justify-between gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
                 <div className="flex-1 min-w-0">
                   <p className={`font-medium text-sm truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     {subscriber.email}
                   </p>
                   <p className={`text-xs truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Subscribed {new Date(subscriber.subscribedAt).toLocaleDateString()}
+                    Subscribed {new Date(subscriber.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <button
@@ -566,7 +567,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {contacts.map((contact) => (
               <div
-                key={contact._id}
+                key={contact._id || contact.id}
                 className={`p-2 rounded border cursor-pointer transition-colors ${
                   selectedContact?._id === contact._id
                     ? darkMode
@@ -587,7 +588,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode }) => {
                       {contact.subject}
                     </p>
                     <p className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                      {new Date(contact.submittedAt).toLocaleDateString()}
+                      {new Date(contact.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
