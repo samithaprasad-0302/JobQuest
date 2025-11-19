@@ -136,6 +136,7 @@ router.post('/signin', authLimiter, validateSignin, async (req, res) => {
     res.set('Expires', '0');
 
     const userData = {
+      id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
@@ -161,7 +162,7 @@ router.post('/signin', authLimiter, validateSignin, async (req, res) => {
     });
 
     res.json({
-        msg: 'User signed in successfully',
+        message: 'User signed in successfully',
         token,
         user: userData
     });

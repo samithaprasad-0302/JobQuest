@@ -2,8 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Op } = require('sequelize');
-const { Job, Company, User } = require('../models');
+const { Op, fn, col, literal } = require('sequelize');
+const { Job, Company, User, sequelize } = require('../models');
 const auth = require('../middleware/auth');
 const { adminAuth } = require('../middleware/adminAuth');
 
@@ -154,7 +154,7 @@ router.get('/featured', async (req, res) => {
 // @route   GET /api/jobs/admin
 // @desc    Get all jobs for admin (including drafts, closed, etc.)
 // @access  Private (Admin)
-router.get('/admin', ...adminAuth, async (req, res) => {
+router.get('/admin', adminAuth[0], adminAuth[1], async (req, res) => {
   try {
     const {
       page = 1,
@@ -215,7 +215,7 @@ router.get('/admin', ...adminAuth, async (req, res) => {
 // @route   POST /api/jobs/admin
 // @desc    Create a new job (admin only)
 // @access  Private (Admin)
-router.post('/admin', ...adminAuth, upload.single('jobImage'), async (req, res) => {
+router.post('/admin', adminAuth[0], adminAuth[1], upload.single('jobImage'), async (req, res) => {
   try {
     const {
       title,
@@ -352,7 +352,7 @@ router.post('/admin', ...adminAuth, upload.single('jobImage'), async (req, res) 
 // @route   PUT /api/jobs/admin/:id
 // @desc    Update a job (admin only)
 // @access  Private (Admin)
-router.put('/admin/:id', ...adminAuth, upload.single('jobImage'), async (req, res) => {
+router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), async (req, res) => {
   try {
     const {
       title,
@@ -497,7 +497,7 @@ router.put('/admin/:id', ...adminAuth, upload.single('jobImage'), async (req, re
 // @route   DELETE /api/jobs/admin/:id
 // @desc    Delete a job (admin only)
 // @access  Private (Admin)
-router.delete('/admin/:id', ...adminAuth, async (req, res) => {
+router.delete('/admin/:id', adminAuth[0], adminAuth[1], async (req, res) => {
   try {
     console.log('🗑️ Attempting to delete job:', req.params.id);
 
@@ -708,11 +708,11 @@ router.get('/categories/stats', async (req, res) => {
     const stats = await Job.findAll({
       where: { status: 'active' },
       attributes: [
-        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+        [fn('COUNT', col('id')), 'count'],
         'category'
       ],
       group: ['category'],
-      order: [[sequelize.literal('count'), 'DESC']],
+      order: [[literal('count'), 'DESC']],
       raw: true,
       subQuery: false
     });
