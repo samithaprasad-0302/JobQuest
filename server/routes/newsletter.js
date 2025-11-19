@@ -16,19 +16,8 @@ router.post('/subscribe', async (req, res) => {
     const existing = await Newsletter.findOne({ 
       where: { email: email.toLowerCase() }
     });
-    if (existing && existing.isActive) {
+    if (existing) {
       return res.status(400).json({ message: 'This email is already subscribed' });
-    }
-
-    // If previously unsubscribed, reactivate
-    if (existing && !existing.isActive) {
-      existing.isActive = true;
-      existing.subscribedAt = new Date();
-      await existing.save();
-      return res.status(200).json({ 
-        message: 'Successfully reactivated subscription',
-        data: existing 
-      });
     }
 
     // Create new subscription
@@ -59,8 +48,8 @@ router.get('/subscribers', authMiddleware, async (req, res) => {
     }
 
     const subscribers = await Newsletter.findAll({ 
-      where: { isActive: true },
-      order: [['subscribedAt', 'DESC']]
+      where: { createdAt: { [require('sequelize').Op.ne]: null } },
+      order: [['createdAt', 'DESC']]
     });
 
     const stats = {
@@ -84,7 +73,7 @@ router.get('/subscribers/count', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
 
-    const count = await Newsletter.count({ where: { isActive: true } });
+    const count = await Newsletter.count();
 
     res.status(200).json({ count });
   } catch (error) {
@@ -109,8 +98,7 @@ router.post('/unsubscribe', async (req, res) => {
       return res.status(404).json({ message: 'Email not found in subscribers' });
     }
 
-    newsletter.isActive = false;
-    await newsletter.save();
+    await newsletter.destroy();
 
     res.status(200).json({ message: 'Successfully unsubscribed from newsletter' });
   } catch (error) {

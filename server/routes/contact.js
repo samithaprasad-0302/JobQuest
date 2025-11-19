@@ -55,7 +55,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const { Op } = require('sequelize');
     const contacts = await Contact.findAll({
       where: query,
-      order: [['submittedAt', 'DESC']],
+      order: [['createdAt', 'DESC']],
       offset: skip,
       limit: parseInt(limit)
     });

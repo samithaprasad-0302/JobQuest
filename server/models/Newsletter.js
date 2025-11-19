@@ -12,14 +12,6 @@ const Newsletter = sequelize.define('Newsletter', {
     allowNull: false,
     unique: true
   },
-  isActive: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true
-  },
-  subscribedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
   preferences: {
     type: DataTypes.JSON,
     defaultValue: {
