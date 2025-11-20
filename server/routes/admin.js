@@ -382,8 +382,7 @@ router.get('/guest-applications', adminAuth, async (req, res) => {
     const { count, rows } = await GuestApplication.findAndCountAll({
       where,
       include: [
-        { model: Job, attributes: ['id', 'title', 'category'] },
-        { model: Company, attributes: ['id', 'name'] }
+        { model: Job, attributes: ['id', 'title', 'category'] }
       ],
       order: [['appliedAt', 'DESC']],
       limit: parseInt(limit),
