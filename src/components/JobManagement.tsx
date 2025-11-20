@@ -105,7 +105,8 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
     urgent: false,
     applicationDeadline: '',
     tags: [''],
-    link: ''
+    link: '',
+    email: ''
   });
 
   const [jobImage, setJobImage] = useState<File | null>(null);
@@ -244,7 +245,8 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
       urgent: false,
       applicationDeadline: '',
       tags: [''],
-      link: ''
+      link: '',
+      email: ''
     });
     setJobImage(null);
     setImagePreview(null);
@@ -385,7 +387,8 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
       urgent: job.urgent,
       applicationDeadline: job.applicationDeadline ? job.applicationDeadline.split('T')[0] : '',
       tags: job.tags.length ? job.tags : [''],
-      link: job.link || ''
+      link: job.link || '',
+      email: job.postedByUser?.email || ''
     });
     
     // Handle existing job image
@@ -977,8 +980,8 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
                       </label>
                       <input
                         type="email"
-                        value={formData.link}
-                        onChange={(e) => handleInputChange('link', e.target.value)}
+                        value={formData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="hr@company.com"
                         className={`w-full px-3 py-2 border rounded-lg ${
                           darkMode 
