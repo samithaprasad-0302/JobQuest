@@ -458,13 +458,13 @@ const JobCarousel: React.FC<JobCarouselProps> = ({ darkMode }) => {
                   </div>
 
                   {/* Job Image - Center */}
-                  {job.jobImage && (
+                  {job.image && (
                     <div className="mb-2 md:mb-3">
                       <img
                         src={
-                          typeof job.jobImage === 'string' 
-                            ? `http://localhost:5000${job.jobImage}` 
-                            : `http://localhost:5000/api/uploads/jobs/${job.jobImage.filename}`
+                          typeof job.image === 'string' 
+                            ? `http://localhost:5000${job.image}` 
+                            : `http://localhost:5000/api/uploads/jobs/${job.image.filename}`
                         }
                         alt="Job post"
                         className="w-full h-20 md:h-32 object-cover rounded-lg"
