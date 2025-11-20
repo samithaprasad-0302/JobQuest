@@ -6,7 +6,7 @@ interface GuestApplicationModalProps {
   onClose: () => void;
   onSignUp?: () => void;
   job: {
-    _id: string;
+    id: string;
     title: string;
     company: string;
     location?: string;
