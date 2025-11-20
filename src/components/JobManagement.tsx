@@ -13,13 +13,22 @@ import {
 interface Job {
   id: string;
   title: string;
-  company: {
+  company?: {
     id: string;
     name: string;
     logo: string;
     location: string;
   };
+  Company?: {
+    id: string;
+    name: string;
+    logo: string;
+    location: string;
+    size?: string;
+    rating?: number;
+  };
   companyName?: string;
+  companyId?: string;
   description: string;
   requirements: string[];
   responsibilities: string[];
@@ -32,7 +41,7 @@ interface Job {
     min: number;
     max: number;
     currency: string;
-    period: string;
+    period?: string;
   };
   benefits: string[];
   category: string;
@@ -43,7 +52,13 @@ interface Job {
   link?: string;
   tags: string[];
   createdAt: string;
-  applicationCount: number;
+  updatedAt?: string;
+  applicationCount?: number;
+  postedByUser?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   image?: string | {
     filename: string;
     originalName: string;
@@ -328,9 +343,9 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
         console.error('❌ Server response error:', response.status, errorData);
-        throw new Error(editingJob ? 'Failed to update job' : 'Failed to create job');
+        throw new Error(errorData.message || (editingJob ? 'Failed to update job' : 'Failed to create job'));
       }
 
       console.log('✅ Job created/updated successfully');
@@ -338,9 +353,9 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
       setShowCreateForm(false);
       setEditingJob(null);
       resetForm();
-    } catch (err) {
+    } catch (err: any) {
       console.error('❌ Form submission error:', err);
-      setError(editingJob ? 'Failed to update job' : 'Failed to create job');
+      setError(err.message || (editingJob ? 'Failed to update job' : 'Failed to create job'));
       console.error('Submit job error:', err);
     }
   };
@@ -349,7 +364,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
     setEditingJob(job);
     setFormData({
       title: job.title,
-      companyName: job.company?.name || job.companyName || '',
+      companyName: job.Company?.name || job.company?.name || job.companyName || '',
       description: job.description,
       requirements: job.requirements.length ? job.requirements : [''],
       responsibilities: job.responsibilities.length ? job.responsibilities : [''],

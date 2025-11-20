@@ -238,13 +238,22 @@ router.post('/admin', adminAuth[0], adminAuth[1], upload.single('jobImage'), asy
       link
     } = req.body;
 
-    // Parse JSON strings back to arrays/objects
-    const parsedRequirements = requirements ? JSON.parse(requirements) : [];
-    const parsedResponsibilities = responsibilities ? JSON.parse(responsibilities) : [];
-    const parsedSkills = skills ? JSON.parse(skills) : [];
-    const parsedBenefits = benefits ? JSON.parse(benefits) : [];
-    const parsedTags = tags ? JSON.parse(tags) : [];
-    const parsedSalary = salary ? JSON.parse(salary) : {};
+    // Parse JSON strings back to arrays/objects with error handling
+    const parseJSON = (str, defaultValue = []) => {
+      try {
+        return str ? JSON.parse(str) : defaultValue;
+      } catch (e) {
+        console.warn('Failed to parse JSON:', str, e.message);
+        return defaultValue;
+      }
+    };
+
+    const parsedRequirements = parseJSON(requirements, []);
+    const parsedResponsibilities = parseJSON(responsibilities, []);
+    const parsedSkills = parseJSON(skills, []);
+    const parsedBenefits = parseJSON(benefits, []);
+    const parsedTags = parseJSON(tags, []);
+    const parsedSalary = parseJSON(salary, {});
 
     // Create a company object for the job
     let companyData = {
@@ -382,13 +391,22 @@ router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), 
       hasFile: !!req.file
     });
 
-    // Parse JSON strings back to arrays/objects
-    const parsedRequirements = requirements ? JSON.parse(requirements) : [];
-    const parsedResponsibilities = responsibilities ? JSON.parse(responsibilities) : [];
-    const parsedSkills = skills ? JSON.parse(skills) : [];
-    const parsedBenefits = benefits ? JSON.parse(benefits) : [];
-    const parsedTags = tags ? JSON.parse(tags) : [];
-    const parsedSalary = salary ? JSON.parse(salary) : {};
+    // Parse JSON strings back to arrays/objects with error handling
+    const parseJSON = (str, defaultValue = []) => {
+      try {
+        return str ? JSON.parse(str) : defaultValue;
+      } catch (e) {
+        console.warn('Failed to parse JSON:', str, e.message);
+        return defaultValue;
+      }
+    };
+
+    const parsedRequirements = parseJSON(requirements, []);
+    const parsedResponsibilities = parseJSON(responsibilities, []);
+    const parsedSkills = parseJSON(skills, []);
+    const parsedBenefits = parseJSON(benefits, []);
+    const parsedTags = parseJSON(tags, []);
+    const parsedSalary = parseJSON(salary, {});
 
     // Find the job to update
     const existingJob = await Job.findByPk(req.params.id);
