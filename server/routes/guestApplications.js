@@ -54,14 +54,9 @@ router.post('/', async (req, res) => {
       status: 'pending'
     });
 
-    // Populate job details for response
-    const savedApplication = await GuestApplication.findByPk(guestApplication.id, {
-      include: [{ model: Job }]
-    });
-
     res.status(201).json({
       message: 'Application submitted successfully',
-      application: savedApplication
+      application: guestApplication
     });
 
   } catch (error) {
