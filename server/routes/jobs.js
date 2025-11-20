@@ -532,6 +532,35 @@ router.delete('/admin/:id', adminAuth[0], adminAuth[1], async (req, res) => {
   }
 });
 
+// @route   GET /api/jobs/categories/stats
+// @desc    Get job statistics by category
+// @access  Public
+router.get('/categories/stats', async (req, res) => {
+  try {
+    const stats = await Job.findAll({
+      where: { status: 'active' },
+      attributes: [
+        [fn('COUNT', col('id')), 'count'],
+        'category'
+      ],
+      group: ['category'],
+      order: [[literal('count'), 'DESC']],
+      raw: true,
+      subQuery: false
+    });
+
+    const formattedStats = stats.map(stat => ({
+      category: stat.category,
+      count: parseInt(stat.count)
+    }));
+
+    res.json(formattedStats);
+  } catch (error) {
+    console.error('Get category stats error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   GET /api/jobs/:id
 // @desc    Get single job
 // @access  Public
@@ -557,7 +586,6 @@ router.get('/:id', async (req, res) => {
     console.error('Get job error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-});
 
 // @route   POST /api/jobs
 // @desc    Create a job
@@ -696,35 +724,6 @@ router.put('/:id/save', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Save job error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// @route   GET /api/jobs/categories/stats
-// @desc    Get job statistics by category
-// @access  Public
-router.get('/categories/stats', async (req, res) => {
-  try {
-    const stats = await Job.findAll({
-      where: { status: 'active' },
-      attributes: [
-        [fn('COUNT', col('id')), 'count'],
-        'category'
-      ],
-      group: ['category'],
-      order: [[literal('count'), 'DESC']],
-      raw: true,
-      subQuery: false
-    });
-
-    const formattedStats = stats.map(stat => ({
-      category: stat.category,
-      count: parseInt(stat.count)
-    }));
-
-    res.json(formattedStats);
-  } catch (error) {
-    console.error('Get category stats error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
