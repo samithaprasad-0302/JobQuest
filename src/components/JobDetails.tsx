@@ -141,11 +141,7 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
   const handleApplyNow = () => {
     if (user) {
       // User is logged in, show the email modal
-      if (job?.link) {
-        setShowEmailModal(true);
-      } else {
-        alert('No contact email available for this job application.');
-      }
+      setShowEmailModal(true);
     } else {
       // User is not logged in, show guest application modal
       setShowGuestApplicationModal(true);
@@ -651,11 +647,11 @@ Best regards,
             <button
               onClick={handleApplyNow}
               className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 ${
-                job.link && !saving
+                !saving
                   ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white hover:from-blue-700 hover:to-teal-700' 
                   : 'bg-gray-400 text-white cursor-not-allowed'
               } ${saving ? 'opacity-75' : ''}`}
-              disabled={!job.link || saving}
+              disabled={saving}
             >
               <div className="flex items-center justify-center space-x-2">
                 {saving ? (
@@ -666,7 +662,7 @@ Best regards,
                 ) : (
                   <>
                     <span>Send Application</span>
-                    {job.link && <Mail className="w-4 h-4" />}
+                    <Mail className="w-4 h-4" />
                   </>
                 )}
               </div>
