@@ -101,12 +101,12 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
   };
 
   const downloadJobPoster = async () => {
-    if (!job?.jobImage) return;
+    if (!job?.image) return;
     
     try {
-      const imageUrl = typeof job.jobImage === 'string' 
-        ? `http://localhost:5000${job.jobImage}` 
-        : `http://localhost:5000/api/uploads/jobs/${job.jobImage.filename}`;
+      const imageUrl = typeof job.image === 'string' 
+        ? `http://localhost:5000${job.image}` 
+        : `http://localhost:5000/api/uploads/jobs/${job.image.filename}`;
       
       const response = await fetch(imageUrl);
       const blob = await response.blob();
@@ -119,7 +119,7 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
       // Generate filename
       const jobTitle = job.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const companyName = (job.company?.name || job.companyName || 'company').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const extension = typeof job.jobImage === 'object' && job.jobImage.filename 
+      const extension = typeof job.image === 'object' && job.image.filename 
         ? job.image.filename.split('.').pop() 
         : 'jpg';
       
@@ -381,14 +381,14 @@ Best regards,
           </div>
 
           {/* Job Poster Image - Large Display */}
-          {job.jobImage && (
+          {job.image && (
             <div className="mb-8 relative">
               <div className="flex justify-center">
                 <img
                   src={
-                    typeof job.jobImage === 'string' 
-                      ? `http://localhost:5000${job.jobImage}` 
-                      : `http://localhost:5000/api/uploads/jobs/${job.jobImage.filename}`
+                    typeof job.image === 'string' 
+                      ? `http://localhost:5000${job.image}` 
+                      : `http://localhost:5000/api/uploads/jobs/${job.image.filename}`
                   }
                   alt="Job Poster"
                   className="w-full max-w-3xl h-auto rounded-lg shadow-lg object-contain bg-gray-100 dark:bg-gray-700"
