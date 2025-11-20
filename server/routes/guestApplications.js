@@ -17,9 +17,9 @@ router.post('/', async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!email || !firstName || !lastName || !jobId || !jobTitle || !companyName) {
+    if (!email || !firstName || !lastName || !jobId) {
       return res.status(400).json({
-        error: 'Missing required fields: email, firstName, lastName, jobId, jobTitle, companyName'
+        error: 'Missing required fields: email, firstName, lastName, jobId'
       });
     }
 
@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
     // Check for duplicate application (same email + job)
     const existingApplication = await GuestApplication.findOne({
       where: {
-        email: email.toLowerCase(),
+        guestEmail: email.toLowerCase(),
         jobId: jobId
       }
     });
@@ -47,16 +47,11 @@ router.post('/', async (req, res) => {
 
     // Create new guest application
     const guestApplication = await GuestApplication.create({
-      email: email.toLowerCase(),
-      firstName,
-      lastName,
-      phone,
+      guestEmail: email.toLowerCase(),
+      guestName: `${firstName} ${lastName}`,
       jobId,
-      jobTitle,
-      companyName,
-      coverLetter,
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
+      applicationMessage: coverLetter || '',
+      status: 'pending'
     });
 
     // Populate job details for response
@@ -93,7 +88,7 @@ router.get('/by-email/:email', async (req, res) => {
     }
 
     const applications = await GuestApplication.findAll({
-      where: { email: email.toLowerCase() },
+      where: { guestEmail: email.toLowerCase() },
       include: [{ model: Job }],
       order: [['appliedAt', 'DESC']]
     });
