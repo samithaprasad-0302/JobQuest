@@ -23,6 +23,9 @@ Application.belongsTo(Job, { foreignKey: 'jobId' });
 Company.hasMany(Application, { foreignKey: 'companyId' });
 Application.belongsTo(Company, { foreignKey: 'companyId' });
 
+Job.hasMany(GuestApplication, { foreignKey: 'jobId' });
+GuestApplication.belongsTo(Job, { foreignKey: 'jobId' });
+
 module.exports = {
   sequelize,
   User,
