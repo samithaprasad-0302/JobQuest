@@ -24,26 +24,27 @@ import {
 } from '../services/adminApi';
 
 interface GuestApplication {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  jobId: {
-    _id: string;
-    title: string;
-    status: string;
-  };
-  jobTitle: string;
-  companyName: string;
+  id: string;
+  guestEmail: string;
+  guestName: string;
+  jobId: string;
+  companyId?: string;
+  applicationMessage?: string;
+  resume?: string;
   coverLetter?: string;
-  status: 'pending' | 'reviewed' | 'rejected' | 'accepted';
+  status: 'pending' | 'reviewed' | 'rejected';
   appliedAt: string;
-  ipAddress?: string;
-  userAgent?: string;
-  reviewedAt?: string;
-  reviewedBy?: string;
-  adminNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+  Job?: {
+    id: string;
+    title: string;
+    category: string;
+  };
+  Company?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface GuestApplicationManagementProps {
@@ -71,7 +72,6 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
     { value: '', label: 'All Status' },
     { value: 'pending', label: 'Pending' },
     { value: 'reviewed', label: 'Reviewed' },
-    { value: 'accepted', label: 'Accepted' },
     { value: 'rejected', label: 'Rejected' }
   ];
 
@@ -85,11 +85,6 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
       bg: darkMode ? 'bg-blue-900/20' : 'bg-blue-100', 
       text: darkMode ? 'text-blue-300' : 'text-blue-800',
       icon: Eye
-    },
-    accepted: { 
-      bg: darkMode ? 'bg-green-900/20' : 'bg-green-100', 
-      text: darkMode ? 'text-green-300' : 'text-green-800',
-      icon: CheckCircle
     },
     rejected: { 
       bg: darkMode ? 'bg-red-900/20' : 'bg-red-100', 
@@ -306,7 +301,7 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
             
             return (
               <div
-                key={application._id}
+                key={application.id}
                 className={`border rounded-lg p-4 transition-all ${
                   darkMode 
                     ? 'bg-gray-800 border-gray-700 hover:border-gray-600' 
@@ -319,27 +314,27 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                     <div className="flex-shrink-0">
                       <div className={`w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center`}>
                         <span className="text-white font-medium text-sm">
-                          {application.firstName.charAt(0)}{application.lastName.charAt(0)}
+                          {application.guestName.charAt(0)}{application.guestName.length > 1 ? application.guestName.split(' ')[1]?.charAt(0) || 'G' : 'G'}
                         </span>
                       </div>
                     </div>
                     
                     <div className="flex-1 min-w-0">
                       <h3 className={`font-medium truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {application.firstName} {application.lastName}
+                        {application.guestName}
                       </h3>
                       <div className="flex items-center space-x-4 text-sm">
                         <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                           <Mail className="h-3 w-3 mr-1" />
-                          {application.email}
+                          {application.guestEmail}
                         </span>
                         <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                           <Briefcase className="h-3 w-3 mr-1" />
-                          {application.jobTitle}
+                          {application.Job?.title || 'Job'}
                         </span>
                         <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                           <Building className="h-3 w-3 mr-1" />
-                          {application.companyName}
+                          {application.Company?.name || 'Company'}
                         </span>
                       </div>
                     </div>
@@ -360,7 +355,7 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
 
                     {/* Toggle Button */}
                     <button
-                      onClick={() => toggleExpanded(application._id)}
+                      onClick={() => toggleExpanded(application.id)}
                       className={`p-1 rounded-lg transition-colors ${
                         darkMode 
                           ? 'hover:bg-gray-700 text-gray-400 hover:text-white' 
@@ -382,12 +377,16 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                           Application Details
                         </h4>
                         
-                        {application.phone && (
-                          <div className="flex items-center space-x-2 text-sm">
-                            <Phone className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                            <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-                              {application.phone}
-                            </span>
+                        {application.applicationMessage && (
+                          <div>
+                            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              Application Message
+                            </label>
+                            <div className={`p-3 rounded-lg text-sm ${
+                              darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-50 text-gray-700'
+                            }`}>
+                              {application.applicationMessage}
+                            </div>
                           </div>
                         )}
 
@@ -404,16 +403,19 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                           </div>
                         )}
 
-                        {application.adminNotes && (
+                        {application.resume && (
                           <div>
                             <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              Admin Notes
+                              Resume
                             </label>
-                            <div className={`p-3 rounded-lg text-sm ${
-                              darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-50 text-gray-700'
-                            }`}>
-                              {application.adminNotes}
-                            </div>
+                            <a 
+                              href={application.resume} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                            >
+                              Download Resume
+                            </a>
                           </div>
                         )}
                       </div>
@@ -427,11 +429,11 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                         <div className="space-y-3">
                           {/* Status Update Buttons */}
                           <div className="grid grid-cols-2 gap-2">
-                            {['reviewed', 'accepted', 'rejected'].map((status) => (
+                            {['reviewed', 'rejected'].map((status) => (
                               <button
                                 key={status}
-                                onClick={() => handleStatusUpdate(application._id, status)}
-                                disabled={updatingStatus === application._id || application.status === status}
+                                onClick={() => handleStatusUpdate(application.id, status)}
+                                disabled={updatingStatus === application.id || application.status === status}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                   application.status === status
                                     ? statusStyles[status as keyof typeof statusStyles].bg + ' ' + statusStyles[status as keyof typeof statusStyles].text
@@ -440,7 +442,7 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                               >
-                                {updatingStatus === application._id ? 'Updating...' : 
+                                {updatingStatus === application.id ? 'Updating...' : 
                                  status.charAt(0).toUpperCase() + status.slice(1)}
                               </button>
                             ))}
@@ -448,7 +450,7 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
 
                           {/* Delete Button */}
                           <button
-                            onClick={() => handleDeleteApplication(application._id)}
+                            onClick={() => handleDeleteApplication(application.id)}
                             className={`w-full flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                               darkMode
                                 ? 'bg-red-900/20 text-red-300 hover:bg-red-900/30 border border-red-800'
@@ -460,24 +462,20 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                           </button>
                         </div>
 
-                        {/* Technical Details */}
+                        {/* Timestamps */}
                         <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
                           <h5 className={`text-xs font-medium uppercase tracking-wider mb-2 ${
                             darkMode ? 'text-gray-400' : 'text-gray-500'
                           }`}>
-                            Technical Details
+                            Details
                           </h5>
                           <div className="space-y-1 text-xs">
-                            {application.ipAddress && (
-                              <div className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
-                                <span className="font-medium">IP:</span> {application.ipAddress}
-                              </div>
-                            )}
-                            {application.reviewedAt && (
-                              <div className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
-                                <span className="font-medium">Reviewed:</span> {formatDate(application.reviewedAt)}
-                              </div>
-                            )}
+                            <div className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                              <span className="font-medium">Applied:</span> {formatDate(application.appliedAt)}
+                            </div>
+                            <div className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                              <span className="font-medium">Created:</span> {formatDate(application.createdAt)}
+                            </div>
                           </div>
                         </div>
                       </div>

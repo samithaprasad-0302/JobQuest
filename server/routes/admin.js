@@ -381,17 +381,20 @@ router.get('/guest-applications', adminAuth, async (req, res) => {
 
     const { count, rows } = await GuestApplication.findAndCountAll({
       where,
+      include: ['Job', 'Company'],
       order: [['appliedAt', 'DESC']],
       limit: parseInt(limit),
       offset: parseInt(offset)
     });
 
     res.json({
-      total: count,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      pages: Math.ceil(count / limit),
-      applications: rows
+      applications: rows,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(count / limit)
+      }
     });
   } catch (error) {
     console.error('Get applications error:', error);
