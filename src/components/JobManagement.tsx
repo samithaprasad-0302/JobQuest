@@ -425,7 +425,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.company.name.toLowerCase().includes(searchTerm.toLowerCase());
+                         (job.Company?.name || job.company?.name || job.companyName || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || job.category === categoryFilter;
     

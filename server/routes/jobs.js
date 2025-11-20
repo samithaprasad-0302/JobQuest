@@ -363,6 +363,9 @@ router.post('/admin', adminAuth[0], adminAuth[1], upload.single('jobImage'), asy
 // @access  Private (Admin)
 router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), async (req, res) => {
   try {
+    const jobId = req.params.id;
+    console.log('📝 UPDATE job request - ID:', jobId);
+    
     const {
       title,
       companyName,
@@ -409,8 +412,11 @@ router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), 
     const parsedSalary = parseJSON(salary, {});
 
     // Find the job to update
-    const existingJob = await Job.findByPk(req.params.id);
+    const existingJob = await Job.findByPk(jobId);
+    console.log('🔍 Found job:', existingJob ? `ID: ${existingJob.id}, Title: ${existingJob.title}` : 'NOT FOUND');
+    
     if (!existingJob) {
+      console.error('❌ Job not found with ID:', jobId);
       return res.status(404).json({ message: 'Job not found' });
     }
 
