@@ -5,7 +5,7 @@ import { useSavedJobsContext } from '../contexts/SavedJobsContext';
 import { jobsAPI } from '../services/api';
 
 interface Job {
-  _id: string;
+  id: string;
   title: string;
   company?: {
     name: string;
@@ -227,13 +227,13 @@ const SavedJobsFinal: React.FC<SavedJobsProps> = ({ darkMode }) => {
           <div className="space-y-4">
             {jobs.map((job) => (
               <div
-                key={job._id}
+                key={job.id}
                 className={`p-6 rounded-lg border transition-all cursor-pointer hover:shadow-md ${
                   darkMode
                     ? 'bg-gray-800 border-gray-700 hover:bg-gray-750'
                     : 'bg-white border-gray-200 hover:shadow-lg'
                 }`}
-                onClick={() => navigate(`/job/${job._id}`)}
+                onClick={() => navigate(`/job/${job.id}`)}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -260,15 +260,15 @@ const SavedJobsFinal: React.FC<SavedJobsProps> = ({ darkMode }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleBookmark(job._id);
+                      toggleBookmark(job.id);
                     }}
                     className={`p-2 rounded-lg transition-colors ${
-                      isJobSaved(job._id)
+                      isJobSaved(job.id)
                         ? `${darkMode ? 'bg-red-900 text-red-400 hover:bg-red-800' : 'bg-red-100 text-red-600 hover:bg-red-200'}`
                         : `${darkMode ? 'bg-gray-700 text-gray-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`
                     }`}
                   >
-                    <Heart className={`w-5 h-5 ${isJobSaved(job._id) ? 'fill-current' : ''}`} />
+                    <Heart className={`w-5 h-5 ${isJobSaved(job.id) ? 'fill-current' : ''}`} />
                   </button>
                 </div>
               </div>
@@ -281,3 +281,4 @@ const SavedJobsFinal: React.FC<SavedJobsProps> = ({ darkMode }) => {
 };
 
 export default SavedJobsFinal;
+

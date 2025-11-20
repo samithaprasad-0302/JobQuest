@@ -6,10 +6,10 @@ import { useSavedJobsContext } from '../contexts/SavedJobsContext';
 import { useAuth } from '../hooks/useAuth';
 
 interface Job {
-  _id: string;
+  id: string;
   title: string;
   company?: {
-    _id: string;
+    id: string;
     name: string;
     logo: string;
   };
@@ -129,7 +129,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
 
   const shareViaEmail = (job: Job, e: React.MouseEvent) => {
     e.stopPropagation();
-    const jobUrl = `${window.location.origin}/job/${job._id}`;
+    const jobUrl = `${window.location.origin}/job/${job.id}`;
     const subject = `Check out this job: ${job.title}`;
     const body = `I found this job opportunity that might interest you:\n\n${job.title} at ${job.company?.name || job.companyName}\nLocation: ${job.location}\n\n${jobUrl}`;
     const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -139,7 +139,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
 
   const shareOnLinkedIn = (job: Job, e: React.MouseEvent) => {
     e.stopPropagation();
-    const jobUrl = `${window.location.origin}/job/${job._id}`;
+    const jobUrl = `${window.location.origin}/job/${job.id}`;
     const text = `Check out this job opportunity: ${job.title} at ${job.company?.name || job.companyName}`;
     const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(jobUrl)}&title=${encodeURIComponent(text)}`;
     window.open(linkedinUrl, '_blank');
@@ -148,7 +148,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
 
   const shareOnTwitter = (job: Job, e: React.MouseEvent) => {
     e.stopPropagation();
-    const jobUrl = `${window.location.origin}/job/${job._id}`;
+    const jobUrl = `${window.location.origin}/job/${job.id}`;
     const text = `🔍 Job Alert: ${job.title} at ${job.company?.name || job.companyName} in ${job.location}`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(jobUrl)}`;
     window.open(twitterUrl, '_blank');
@@ -157,7 +157,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
 
   const shareOnWhatsApp = (job: Job, e: React.MouseEvent) => {
     e.stopPropagation();
-    const jobUrl = `${window.location.origin}/job/${job._id}`;
+    const jobUrl = `${window.location.origin}/job/${job.id}`;
     const text = `Check out this job: ${job.title} at ${job.company?.name || job.companyName}\n${jobUrl}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, '_blank');
@@ -415,7 +415,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
             {filteredJobs.map((job) => (
               <div
-                key={job._id}
+                key={job.id}
                 className={`group relative rounded-lg md:rounded-xl shadow-md md:shadow-lg transition-all duration-300 hover:shadow-lg md:hover:shadow-2xl hover:-translate-y-1 md:hover:-translate-y-2 min-h-[280px] md:min-h-[400px] ${
                   darkMode 
                     ? 'bg-gray-800 border border-gray-700' 
@@ -440,16 +440,16 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
                     </div>
                     
                     <button
-                      onClick={() => handleBookmarkClick(job._id)}
+                      onClick={() => handleBookmarkClick(job.id)}
                       className={`p-1 md:p-2 rounded-md md:rounded-lg transition-colors ml-1 ${
-                        isJobSaved(job._id)
+                        isJobSaved(job.id)
                           ? 'text-blue-600 bg-blue-100 dark:bg-blue-900/20'
                           : darkMode
                           ? 'text-gray-400 hover:text-blue-400 hover:bg-gray-700'
                           : 'text-gray-400 hover:text-blue-600 hover:bg-gray-100'
                       }`}
                     >
-                      <Bookmark className={`w-3 h-3 md:w-5 md:h-5 ${isJobSaved(job._id) ? 'fill-current' : ''}`} />
+                      <Bookmark className={`w-3 h-3 md:w-5 md:h-5 ${isJobSaved(job.id) ? 'fill-current' : ''}`} />
                     </button>
                   </div>
 
@@ -596,7 +596,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
                   {/* Action Buttons - Always at bottom of card */}
                   <div className="flex space-x-1 md:space-x-3 mt-auto pt-1 md:pt-2">
                     <button 
-                      onClick={() => navigate(`/job/${job._id}`)}
+                      onClick={() => navigate(`/job/${job.id}`)}
                       className="flex-1 bg-gradient-to-r from-blue-600 to-teal-600 text-white px-2 py-1 md:px-4 md:py-2 rounded-md md:rounded-lg text-xs md:text-sm font-medium hover:from-blue-700 hover:to-teal-700 transition-all duration-300"
                     >
                       Apply
@@ -605,9 +605,9 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
                     {/* Enhanced Share Menu */}
                     <div className="relative share-menu-container">
                       <button 
-                        onClick={(e) => toggleShareMenu(job._id, e)}
+                        onClick={(e) => toggleShareMenu(job.id, e)}
                         className={`px-2 py-1 md:px-4 md:py-2 rounded-md md:rounded-lg border transition-all duration-300 ${
-                          openShareMenu === job._id
+                          openShareMenu === job.id
                             ? darkMode
                               ? 'border-blue-500 bg-blue-600 text-white'
                               : 'border-blue-500 bg-blue-100 text-blue-600'
@@ -620,7 +620,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
                       </button>
 
                       {/* Share Dropdown Menu */}
-                      {openShareMenu === job._id && (
+                      {openShareMenu === job.id && (
                         <div className={`absolute right-0 bottom-full mb-2 z-[60] w-48 rounded-lg shadow-lg border ${
                           darkMode
                             ? 'bg-gray-800 border-gray-700'
@@ -629,7 +629,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
                           <div className="p-2 space-y-1">
                             {/* Copy Link */}
                             <button
-                              onClick={(e) => copyJobLink(job._id, e)}
+                              onClick={(e) => copyJobLink(job.id, e)}
                               className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
                                 darkMode
                                   ? 'hover:bg-gray-700 text-gray-300 hover:text-white'
@@ -759,3 +759,4 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
 };
 
 export default AllJobs;
+

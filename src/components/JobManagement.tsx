@@ -11,10 +11,10 @@ import {
 } from 'lucide-react';
 
 interface Job {
-  _id: string;
+  id: string;
   title: string;
   company: {
-    _id: string;
+    id: string;
     name: string;
     logo: string;
     location: string;
@@ -305,7 +305,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
       }
 
       const url = editingJob 
-        ? `http://localhost:5000/api/jobs/admin/${editingJob._id}`
+        ? `http://localhost:5000/api/jobs/admin/${editingjob.id}`
         : 'http://localhost:5000/api/jobs/admin';
       
       const method = editingJob ? 'PUT' : 'POST';
@@ -581,7 +581,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
             </thead>
             <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
               {filteredJobs.map((job) => (
-                <tr key={job._id} className={darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+                <tr key={job.id} className={darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -641,7 +641,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(job._id)}
+                        onClick={() => handleDelete(job.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1075,3 +1075,4 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
 };
 
 export default JobManagement;
+

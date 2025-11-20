@@ -58,7 +58,7 @@ const GuestApplicationModal: React.FC<GuestApplicationModalProps> = ({
     try {
       const applicationData = {
         ...formData,
-        jobId: job._id,
+        jobId: job.id,
         jobTitle: job.title,
         companyName: job.company
       };

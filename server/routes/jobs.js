@@ -586,6 +586,7 @@ router.get('/:id', async (req, res) => {
     console.error('Get job error:', error);
     res.status(500).json({ message: 'Server error' });
   }
+});
 
 // @route   POST /api/jobs
 // @desc    Create a job

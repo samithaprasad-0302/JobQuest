@@ -21,10 +21,10 @@ import { useAuth } from '../hooks/useAuth';
 import { applicationsAPI } from '../services/api';
 
 interface Job {
-  _id: string;
+  id: string;
   title: string;
   company?: {
-    _id: string;
+    id: string;
     name: string;
     logo: string;
   };
@@ -175,7 +175,7 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
       setSaving(true);
       
       const applicationData = {
-        jobId: job._id,
+        jobId: job.id,
         applicationMethod: applicationMethod,
         contactEmail: job.link,
         emailSubject: decodeURIComponent(emailSubject),
@@ -789,7 +789,7 @@ Best regards,
               onClose={() => setShowGuestApplicationModal(false)}
               onSignUp={handleOpenSignup}
               job={{
-                _id: job._id,
+                _id: job.id,
                 title: job.title,
                 company: job.company?.name || job.companyName || '',
                 location: job.location,
@@ -816,3 +816,4 @@ Best regards,
 };
 
 export default JobDetails;
+

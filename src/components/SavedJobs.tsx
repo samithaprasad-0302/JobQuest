@@ -5,7 +5,7 @@ import { useSavedJobsContext } from '../contexts/SavedJobsContext';
 import { jobsAPI } from '../services/api';
 
 interface Job {
-  _id: string;
+  id: string;
   title: string;
   company?: {
     name: string;
@@ -198,11 +198,11 @@ const SavedJobs: React.FC<SavedJobsProps> = ({ darkMode }) => {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {jobs.map((job) => (
                 <div
-                  key={job._id}
+                  key={job.id}
                   className={`${
                     darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                   } border rounded-xl p-6 hover:shadow-lg transition-shadow duration-300 cursor-pointer`}
-                  onClick={() => handleViewJob(job._id)}
+                  onClick={() => handleViewJob(job.id)}
                 >
                   {/* Company Logo and Title */}
                   <div className="flex items-start justify-between mb-4">
@@ -246,7 +246,7 @@ const SavedJobs: React.FC<SavedJobsProps> = ({ darkMode }) => {
                   <div className="flex items-center justify-between mt-auto">
                     <button
                       className={`p-2 rounded-lg transition-colors ${
-                        isJobSaved(job._id)
+                        isJobSaved(job.id)
                           ? darkMode
                             ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20'
                             : 'text-yellow-600 bg-yellow-100 hover:bg-yellow-200'
@@ -256,13 +256,13 @@ const SavedJobs: React.FC<SavedJobsProps> = ({ darkMode }) => {
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleBookmark(job._id);
+                        toggleBookmark(job.id);
                       }}
-                      title={isJobSaved(job._id) ? 'Remove from saved jobs' : 'Save job'}
+                      title={isJobSaved(job.id) ? 'Remove from saved jobs' : 'Save job'}
                     >
                       <Bookmark 
                         className={`w-4 h-4 ${
-                          isJobSaved(job._id) ? 'fill-current' : ''
+                          isJobSaved(job.id) ? 'fill-current' : ''
                         }`} 
                       />
                     </button>
@@ -271,7 +271,7 @@ const SavedJobs: React.FC<SavedJobsProps> = ({ darkMode }) => {
                       className="bg-gradient-to-r from-blue-600 to-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-teal-700 transition-all duration-300 transform hover:scale-105 shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleViewJob(job._id);
+                        handleViewJob(job.id);
                       }}
                     >
                       Apply Now
@@ -283,7 +283,7 @@ const SavedJobs: React.FC<SavedJobsProps> = ({ darkMode }) => {
                           ? 'text-gray-400 hover:bg-gray-700 hover:text-white'
                           : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
                       }`}
-                      onClick={(e) => handleShareJob(job._id, e)}
+                      onClick={(e) => handleShareJob(job.id, e)}
                       title="Share Job"
                     >
                       <Share2 className="w-4 h-4" />
@@ -308,3 +308,4 @@ const SavedJobs: React.FC<SavedJobsProps> = ({ darkMode }) => {
 };
 
 export default SavedJobs;
+
