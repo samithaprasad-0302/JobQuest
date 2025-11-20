@@ -311,7 +311,7 @@ router.post('/admin', adminAuth[0], adminAuth[1], upload.single('jobImage'), asy
 
     // Add job image if uploaded
     if (req.file) {
-      jobData.jobImage = {
+      jobData.image = {
         filename: req.file.filename,
         originalName: req.file.originalname,
         path: req.file.path,
@@ -452,7 +452,7 @@ router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), 
 
     // Add job image if uploaded, otherwise keep existing
     if (req.file) {
-      updateData.jobImage = {
+      updateData.image = {
         filename: req.file.filename,
         originalName: req.file.originalname,
         path: req.file.path,

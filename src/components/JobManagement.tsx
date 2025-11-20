@@ -44,7 +44,7 @@ interface Job {
   tags: string[];
   createdAt: string;
   applicationCount: number;
-  jobImage?: string | {
+  image?: string | {
     filename: string;
     originalName: string;
     path: string;
@@ -374,11 +374,11 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
     });
     
     // Handle existing job image
-    if (job.jobImage) {
-      if (typeof job.jobImage === 'string') {
-        setImagePreview(`http://localhost:5000${job.jobImage}`);
+    if (job.image) {
+      if (typeof job.image === 'string') {
+        setImagePreview(`http://localhost:5000${job.image}`);
       } else {
-        setImagePreview(`http://localhost:5000/api/uploads/jobs/${job.jobImage.filename}`);
+        setImagePreview(`http://localhost:5000/api/uploads/jobs/${job.image.filename}`);
       }
     }
     

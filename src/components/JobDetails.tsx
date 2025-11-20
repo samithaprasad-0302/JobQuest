@@ -48,7 +48,7 @@ interface Job {
   benefits: string[];
   category: string;
   link?: string;
-  jobImage?: string | {
+  image?: string | {
     filename: string;
     originalName: string;
     path: string;
@@ -120,7 +120,7 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
       const jobTitle = job.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const companyName = (job.company?.name || job.companyName || 'company').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const extension = typeof job.jobImage === 'object' && job.jobImage.filename 
-        ? job.jobImage.filename.split('.').pop() 
+        ? job.image.filename.split('.').pop() 
         : 'jpg';
       
       link.download = `${jobTitle}_${companyName}_job_poster.${extension}`;

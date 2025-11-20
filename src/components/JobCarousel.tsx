@@ -27,7 +27,7 @@ interface Job {
   link?: string;
   description: string;
   skills: string[];
-  jobImage?: string | {
+  image?: string | {
     filename: string;
     originalName: string;
     path: string;
@@ -472,9 +472,9 @@ const JobCarousel: React.FC<JobCarouselProps> = ({ darkMode }) => {
                           console.log('✅ Job image loaded successfully');
                         }}
                         onError={(e) => {
-                          const imageUrl = typeof job.jobImage === 'string' 
-                            ? `http://localhost:5000${job.jobImage}` 
-                            : `http://localhost:5000/api/uploads/jobs/${job.jobImage?.filename}`;
+                          const imageUrl = typeof job.image === 'string' 
+                            ? `http://localhost:5000${job.image}` 
+                            : `http://localhost:5000/api/uploads/jobs/${job.image?.filename}`;
                           console.error('❌ Image failed to load:', imageUrl);
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}

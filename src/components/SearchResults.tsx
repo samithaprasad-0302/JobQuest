@@ -28,7 +28,7 @@ interface Job {
   link?: string;
   description: string;
   skills: string[];
-  jobImage?: string | {
+  image?: string | {
     filename: string;
     originalName: string;
   };
@@ -514,12 +514,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({ darkMode }) => {
 
                   {/* Job Image - Compact for mobile - Fixed Height */}
                   <div className="mb-1 md:mb-3 min-h-[64px] md:min-h-[128px]">
-                    {job.jobImage ? (
+                    {job.image ? (
                       <img
                         src={
-                          typeof job.jobImage === 'string' 
-                            ? `http://localhost:5000${job.jobImage}` 
-                            : `http://localhost:5000/api/uploads/jobs/${job.jobImage.filename}`
+                          typeof job.image === 'string' 
+                            ? `http://localhost:5000${job.image}` 
+                            : `http://localhost:5000/api/uploads/jobs/${job.image.filename}`
                         }
                         alt="Job post"
                         className="w-full h-16 md:h-32 object-cover rounded-md md:rounded-lg"

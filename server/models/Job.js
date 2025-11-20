@@ -96,6 +96,10 @@ const Job = sequelize.define('Job', {
   tags: {
     type: DataTypes.JSON,
     defaultValue: []
+  },
+  image: {
+    type: DataTypes.JSON,
+    defaultValue: null
   }
 }, {
   timestamps: true
