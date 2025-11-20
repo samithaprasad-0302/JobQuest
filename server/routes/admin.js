@@ -514,4 +514,33 @@ router.get('/contacts', adminAuth, async (req, res) => {
   }
 });
 
+// Get admin permissions for the current user
+router.get('/permissions', adminAuth, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.userId, {
+      attributes: ['id', 'role']
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Define permissions based on role
+    const permissions = {
+      canChangeRoles: user.role === 'superadmin',
+      canManageUsers: ['admin', 'superadmin'].includes(user.role),
+      canManageJobs: ['admin', 'superadmin'].includes(user.role),
+      canManageCompanies: user.role === 'superadmin',
+      canManageApplications: ['admin', 'superadmin'].includes(user.role),
+      canViewAnalytics: ['admin', 'superadmin'].includes(user.role),
+      role: user.role
+    };
+
+    res.json(permissions);
+  } catch (error) {
+    console.error('Get permissions error:', error);
+    res.status(500).json({ message: 'Error fetching permissions' });
+  }
+});
+
 module.exports = router;
