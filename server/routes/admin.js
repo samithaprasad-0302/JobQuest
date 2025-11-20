@@ -119,11 +119,13 @@ router.get('/users', adminAuth, async (req, res) => {
     });
 
     res.json({
-      total: count,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      pages: Math.ceil(count / limit),
-      users: rows
+      users: rows,
+      pagination: {
+        totalUsers: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(count / limit)
+      }
     });
   } catch (error) {
     console.error('Get users error:', error);
@@ -244,38 +246,6 @@ router.get('/jobs/:id', adminAuth, async (req, res) => {
   } catch (error) {
     console.error('Get job error:', error);
     res.status(500).json({ message: 'Error fetching job' });
-  }
-});
-
-// Update job status
-router.put('/jobs/:id', adminAuth, async (req, res) => {
-  try {
-    const job = await Job.findByPk(req.params.id);
-    if (!job) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-
-    await job.update(req.body);
-    res.json({ message: 'Job updated successfully', job });
-  } catch (error) {
-    console.error('Update job error:', error);
-    res.status(500).json({ message: 'Error updating job' });
-  }
-});
-
-// Delete job
-router.delete('/jobs/:id', adminAuth, async (req, res) => {
-  try {
-    const job = await Job.findByPk(req.params.id);
-    if (!job) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-
-    await job.destroy();
-    res.json({ message: 'Job deleted successfully' });
-  } catch (error) {
-    console.error('Delete job error:', error);
-    res.status(500).json({ message: 'Error deleting job' });
   }
 });
 
@@ -401,6 +371,56 @@ router.get('/guest-applications', adminAuth, async (req, res) => {
   } catch (error) {
     console.error('Get applications error:', error);
     res.status(500).json({ message: 'Error fetching applications' });
+  }
+});
+
+// Export guest applications as CSV
+router.get('/guest-applications/export/csv', adminAuth, async (req, res) => {
+  try {
+    const { status, search } = req.query;
+
+    let where = {};
+    if (status) where.status = status;
+    if (search) {
+      where[Op.or] = [
+        { guestEmail: { [Op.like]: `%${search}%` } },
+        { guestName: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    const applications = await GuestApplication.findAll({
+      where,
+      include: [
+        { model: Job, attributes: ['id', 'title', 'category'] }
+      ],
+      order: [['appliedAt', 'DESC']]
+    });
+
+    // Generate CSV content
+    const csvHeaders = ['Guest Name', 'Guest Email', 'Job Title', 'Job Category', 'Status', 'Message', 'Applied At'];
+    const csvRows = applications.map(app => [
+      app.guestName || '',
+      app.guestEmail || '',
+      app.Job?.title || '',
+      app.Job?.category || '',
+      app.status || '',
+      (app.applicationMessage || '').replace(/"/g, '""'), // Escape quotes
+      app.appliedAt ? new Date(app.appliedAt).toLocaleString() : ''
+    ]);
+
+    // Create CSV string
+    const csvContent = [
+      csvHeaders.map(h => `"${h}"`).join(','),
+      ...csvRows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Send CSV file
+    res.setHeader('Content-Type', 'text/csv;charset=utf-8;');
+    res.setHeader('Content-Disposition', 'attachment; filename="guest-applications.csv"');
+    res.send(csvContent);
+  } catch (error) {
+    console.error('Export CSV error:', error);
+    res.status(500).json({ message: 'Error exporting CSV' });
   }
 });
 

@@ -296,7 +296,7 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
       ) : (
         <div className="space-y-4">
           {applications.map((application) => {
-            const isExpanded = expandedApplications.has(application._id);
+            const isExpanded = expandedApplications.has(application.id);
             const StatusIcon = statusStyles[application.status].icon;
             
             return (
