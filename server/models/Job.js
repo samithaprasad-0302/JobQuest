@@ -100,6 +100,14 @@ const Job = sequelize.define('Job', {
   image: {
     type: DataTypes.JSON,
     defaultValue: null
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  link: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   timestamps: true

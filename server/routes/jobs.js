@@ -314,6 +314,7 @@ router.post('/admin', adminAuth[0], adminAuth[1], upload.single('jobImage'), asy
       applicationDeadline: applicationDeadline || null,
       tags: parsedTags,
       link: link || null,
+      email: email || null,
       postedBy: req.user.id,
       status: 'active'
     };
@@ -384,13 +385,15 @@ router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), 
       urgent,
       applicationDeadline,
       tags,
-      link
+      link,
+      email
     } = req.body;
 
     console.log('🔍 Raw UPDATE request body data:', {
       title,
       companyName,
       link,
+      email,
       hasFile: !!req.file
     });
 
@@ -471,6 +474,7 @@ router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), 
       applicationDeadline: applicationDeadline || null,
       tags: parsedTags,
       link: link || null,
+      email: email || null,
       updatedAt: new Date()
     };
 

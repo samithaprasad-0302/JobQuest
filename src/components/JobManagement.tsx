@@ -316,6 +316,11 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
         formDataToSend.append('link', formData.link);
       }
 
+      // Add email field
+      if (formData.email) {
+        formDataToSend.append('email', formData.email);
+      }
+
       // Add image if selected
       if (jobImage) {
         formDataToSend.append('jobImage', jobImage);
