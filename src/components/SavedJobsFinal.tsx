@@ -55,7 +55,7 @@ const SavedJobsFinal: React.FC<SavedJobsProps> = ({ darkMode }) => {
       
       // Create mock data as fallback while we test API calls one by one
       const mockJobs = savedJobs.map(jobId => ({
-        _id: jobId,
+        id: jobId,
         title: `Job ${jobId.slice(-8)}`,
         company: 'Sample Company (Loading real data...)',
         location: 'Sample Location',
@@ -78,7 +78,7 @@ const SavedJobsFinal: React.FC<SavedJobsProps> = ({ darkMode }) => {
             return job;
           } catch (err) {
             console.log(`Failed to fetch job ${jobId}, using mock data:`, err);
-            return mockJobs.find(mock => mock._id === jobId) || null;
+            return mockJobs.find(mock => mock.id === jobId) || null;
           }
         });
         

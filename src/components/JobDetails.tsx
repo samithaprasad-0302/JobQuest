@@ -789,7 +789,7 @@ Best regards,
               onClose={() => setShowGuestApplicationModal(false)}
               onSignUp={handleOpenSignup}
               job={{
-                _id: job.id,
+                id: job.id,
                 title: job.title,
                 company: job.company?.name || job.companyName || '',
                 location: job.location,

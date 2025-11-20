@@ -305,7 +305,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
       }
 
       const url = editingJob 
-        ? `http://localhost:5000/api/jobs/admin/${editingjob.id}`
+        ? `http://localhost:5000/api/jobs/admin/${editingJob.id}`
         : 'http://localhost:5000/api/jobs/admin';
       
       const method = editingJob ? 'PUT' : 'POST';

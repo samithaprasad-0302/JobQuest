@@ -15,7 +15,7 @@ const SavedJobsWorking: React.FC<SavedJobsProps> = ({ darkMode }) => {
 
   // Instead of fetching jobs, let's just display the IDs for now
   const mockJobs = savedJobs.map(jobId => ({
-    _id: jobId,
+    id: jobId,
     title: `Job Title (ID: ...${jobId.slice(-8)})`,
     company: 'Loading company...',
     location: 'Loading location...',
