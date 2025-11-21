@@ -344,7 +344,9 @@ router.get('/guest-applications', adminAuth, async (req, res) => {
     if (status) where.status = status;
     if (search) {
       where[Op.or] = [
-        { email: { [Op.like]: `%${search}%` } }
+        { email: { [Op.like]: `%${search}%` } },
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } }
       ];
     }
 
@@ -382,7 +384,9 @@ router.get('/guest-applications/export/csv', adminAuth, async (req, res) => {
     if (status) where.status = status;
     if (search) {
       where[Op.or] = [
-        { email: { [Op.like]: `%${search}%` } }
+        { email: { [Op.like]: `%${search}%` } },
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } }
       ];
     }
 
@@ -395,14 +399,18 @@ router.get('/guest-applications/export/csv', adminAuth, async (req, res) => {
     });
 
     // Generate CSV content
-    const csvHeaders = ['Email', 'Job Title', 'Category', 'Status', 'Cover Letter', 'Applied At'];
+    const csvHeaders = ['First Name', 'Last Name', 'Email', 'Phone', 'Job Title', 'Company', 'Status', 'Cover Letter', 'Applied At', 'IP Address'];
     const csvRows = applications.map(app => [
+      app.firstName || '',
+      app.lastName || '',
       app.email || '',
-      app.Job?.title || '',
-      app.Job?.category || '',
+      app.phone || '',
+      app.jobTitle || app.Job?.title || '',
+      app.companyName || '',
       app.status || '',
       (app.coverLetter || '').replace(/"/g, '""'),
-      app.appliedAt ? new Date(app.appliedAt).toLocaleString() : ''
+      app.appliedAt ? new Date(app.appliedAt).toLocaleString() : '',
+      app.ipAddress || ''
     ]);
 
     // Create CSV string

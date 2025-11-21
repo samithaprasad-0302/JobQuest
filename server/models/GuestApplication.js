@@ -11,12 +11,24 @@ const GuestApplication = sequelize.define('GuestApplication', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  firstName: {
+    type: DataTypes.STRING
+  },
+  lastName: {
+    type: DataTypes.STRING
+  },
   phone: {
     type: DataTypes.STRING
   },
   jobId: {
     type: DataTypes.UUID,
     allowNull: false
+  },
+  jobTitle: {
+    type: DataTypes.STRING
+  },
+  companyName: {
+    type: DataTypes.STRING
   },
   companyId: {
     type: DataTypes.UUID
@@ -37,6 +49,12 @@ const GuestApplication = sequelize.define('GuestApplication', {
   appliedAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
+  },
+  ipAddress: {
+    type: DataTypes.STRING
+  },
+  userAgent: {
+    type: DataTypes.STRING
   }
 }, {
   timestamps: true

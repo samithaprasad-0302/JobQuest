@@ -26,14 +26,20 @@ import {
 interface GuestApplication {
   id: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
   jobId: string;
+  jobTitle?: string;
+  companyName?: string;
   companyId?: string;
   applicationMessage?: string;
   resume?: string;
   coverLetter?: string;
   status: 'pending' | 'reviewed' | 'rejected';
   appliedAt: string;
+  ipAddress?: string;
+  userAgent?: string;
   createdAt: string;
   updatedAt: string;
   Job?: {
@@ -310,16 +316,18 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                     <div className="flex-shrink-0">
                       <div className={`w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center`}>
                         <span className="text-white font-medium text-sm">
-                          {application.email.charAt(0).toUpperCase()}
+                          {(application.firstName?.charAt(0) || application.email.charAt(0)).toUpperCase()}
                         </span>
                       </div>
                     </div>
                     
                     <div className="flex-1 min-w-0">
                       <h3 className={`font-medium truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {application.email}
+                        {application.firstName && application.lastName 
+                          ? `${application.firstName} ${application.lastName}` 
+                          : application.email}
                       </h3>
-                      <div className="flex items-center space-x-4 text-sm">
+                      <div className="flex items-center space-x-4 text-sm flex-wrap">
                         <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                           <Mail className="h-3 w-3 mr-1" />
                           {application.email}
@@ -332,8 +340,14 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                         )}
                         <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                           <Briefcase className="h-3 w-3 mr-1" />
-                          {application.Job?.title || 'Job'}
+                          {application.jobTitle || application.Job?.title || 'Job'}
                         </span>
+                        {application.companyName && (
+                          <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <Building className="h-3 w-3 mr-1" />
+                            {application.companyName}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -372,14 +386,72 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                       {/* Application Details */}
                       <div className="space-y-4">
                         <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                          Application Details
+                          Personal Information
+                        </h4>
+                        
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          {application.firstName && (
+                            <div>
+                              <label className={`block text-xs font-medium mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                First Name
+                              </label>
+                              <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{application.firstName}</p>
+                            </div>
+                          )}
+                          {application.lastName && (
+                            <div>
+                              <label className={`block text-xs font-medium mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                Last Name
+                              </label>
+                              <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{application.lastName}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            Email Address
+                          </label>
+                          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{application.email}</p>
+                        </div>
+
+                        {application.phone && (
+                          <div>
+                            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              Phone Number
+                            </label>
+                            <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{application.phone}</p>
+                          </div>
+                        )}
+
+                        <h4 className={`font-medium mt-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                          Job Details
+                        </h4>
+
+                        {application.jobTitle && (
+                          <div>
+                            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              Job Title
+                            </label>
+                            <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{application.jobTitle}</p>
+                          </div>
+                        )}
+
+                        {application.companyName && (
+                          <div>
+                            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              Company Name
+                            </label>
+                            <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{application.companyName}</p>
+                          </div>
+                        )}
+
+                        <h4 className={`font-medium mt-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                          Application Message
                         </h4>
                         
                         {application.applicationMessage && (
                           <div>
-                            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              Application Message
-                            </label>
                             <div className={`p-3 rounded-lg text-sm ${
                               darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-50 text-gray-700'
                             }`}>

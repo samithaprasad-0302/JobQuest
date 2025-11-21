@@ -52,19 +52,35 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Capture IP address and User Agent
+    const ipAddress = req.ip || req.connection.remoteAddress || '';
+    const userAgent = req.get('user-agent') || '';
+
     // Create new guest application
     console.log('💾 Creating guest application with data:', {
       email: email.toLowerCase(),
+      firstName,
+      lastName,
       phone: phone || '',
       jobId,
-      coverLetter: coverLetter || ''
+      jobTitle,
+      companyName,
+      coverLetter: coverLetter || '',
+      ipAddress,
+      userAgent
     });
 
     const guestApplication = await GuestApplication.create({
       email: email.toLowerCase(),
+      firstName: firstName || '',
+      lastName: lastName || '',
       phone: phone || '',
       jobId,
+      jobTitle: jobTitle || '',
+      companyName: companyName || '',
       coverLetter: coverLetter || '',
+      ipAddress: ipAddress,
+      userAgent: userAgent,
       status: 'pending'
     });
 
