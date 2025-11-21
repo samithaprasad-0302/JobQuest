@@ -18,6 +18,27 @@ const Application = sequelize.define('Application', {
   companyId: {
     type: DataTypes.UUID
   },
+  jobTitle: {
+    type: DataTypes.STRING
+  },
+  companyName: {
+    type: DataTypes.STRING
+  },
+  applicationMethod: {
+    type: DataTypes.STRING
+  },
+  contactEmail: {
+    type: DataTypes.STRING
+  },
+  emailSubject: {
+    type: DataTypes.TEXT
+  },
+  emailBody: {
+    type: DataTypes.TEXT('long')
+  },
+  notes: {
+    type: DataTypes.TEXT
+  },
   status: {
     type: DataTypes.ENUM('pending', 'reviewed', 'interview', 'rejected', 'accepted'),
     defaultValue: 'pending'

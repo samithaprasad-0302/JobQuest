@@ -38,11 +38,17 @@ router.post('/', auth, async (req, res) => {
       });
     }
     
-    // Create new application with only valid fields
+    // Create new application with all valid fields
     const application = await Application.create({
       userId: req.user.id,
       jobId: jobId,
-      applicationMessage: emailBody || notes || null,
+      jobTitle: job.title,
+      companyName: job.Company?.name || job.companyName,
+      applicationMethod: applicationMethod,
+      contactEmail: contactEmail,
+      emailSubject: emailSubject,
+      emailBody: emailBody,
+      notes: notes,
       status: 'pending'
     });
     
