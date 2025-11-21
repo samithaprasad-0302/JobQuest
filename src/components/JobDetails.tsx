@@ -139,11 +139,14 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
   };
 
   const handleApplyNow = () => {
+    console.log('Apply button clicked - user:', user ? 'logged in' : 'not logged in');
     if (user) {
       // User is logged in, show the email modal
+      console.log('Setting showEmailModal to true');
       setShowEmailModal(true);
     } else {
       // User is not logged in, show guest application modal
+      console.log('Setting showGuestApplicationModal to true');
       setShowGuestApplicationModal(true);
     }
   };
@@ -671,7 +674,7 @@ Best regards,
         </div>
 
         {/* Email Modal */}
-        {showEmailModal && job?.link && (
+        {showEmailModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className={`rounded-lg p-6 w-full max-w-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
               <div className="flex justify-between items-center mb-4">
@@ -693,7 +696,7 @@ Best regards,
                   </label>
                   <div className={`p-3 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
                     <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      {job.link}
+                      {job?.link || <span className="text-red-500">No contact email found</span>}
                     </span>
                   </div>
                 </div>
@@ -708,10 +711,20 @@ Best regards,
                 </div>
 
                 <div className="space-y-3">
+                  {!job?.link && (
+                    <div className={`p-3 rounded-lg ${darkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'}`}>
+                      <p className="text-sm">No contact email found for this job. Please contact the company directly.</p>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={openGmail}
-                      className="flex items-center justify-center space-x-2 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                      disabled={!job?.link}
+                      className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-lg hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                        darkMode 
+                          ? 'bg-gray-700 border border-gray-600 text-gray-100 hover:bg-gray-600 disabled:hover:bg-gray-700' 
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:hover:bg-white'
+                      }`}
                     >
                       <img 
                         src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" 
@@ -727,7 +740,12 @@ Best regards,
                     
                     <button
                       onClick={openOutlook}
-                      className="flex items-center justify-center space-x-2 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                      disabled={!job?.link}
+                      className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-lg hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                        darkMode 
+                          ? 'bg-gray-700 border border-gray-600 text-gray-100 hover:bg-gray-600 disabled:hover:bg-gray-700' 
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:hover:bg-white'
+                      }`}
                     >
                       <img 
                         src="https://res.cdn.office.net/assets/mail/v1.9.3/icons/mail-16x.png" 
@@ -745,18 +763,28 @@ Best regards,
                   <div className="flex space-x-3">
                     <button
                       onClick={openEmailClient}
-                      className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      disabled={!job?.link}
+                      className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        darkMode 
+                          ? 'bg-gray-600 text-white disabled:hover:bg-gray-600' 
+                          : 'bg-gray-600 text-white disabled:hover:bg-gray-600'
+                      }`}
                     >
                       <Mail className="w-4 h-4" />
                       <span>Other App</span>
                     </button>
                     
                     <button
-                      onClick={() => copyToClipboard(job.link!)}
-                      className={`flex-1 px-3 py-2 rounded-lg transition-colors ${
+                      onClick={() => {
+                        const emailBody = job?.applicationInstructions || 
+                          `Job Title: ${job.title}\nCompany: ${job.company?.name || job.companyName}\nEmail: ${job.link}`;
+                        copyToClipboard(emailBody);
+                      }}
+                      disabled={!job?.link}
+                      className={`flex-1 px-3 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         darkMode 
-                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:hover:bg-gray-700' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:hover:bg-gray-100'
                       }`}
                     >
                       Copy Email
