@@ -657,7 +657,9 @@ router.post('/', auth, async (req, res) => {
       benefits,
       category,
       applicationDeadline,
-      tags
+      tags,
+      email,
+      link
     } = req.body;
 
     // Verify company exists and user has permission
@@ -684,6 +686,8 @@ router.post('/', auth, async (req, res) => {
       category,
       applicationDeadline,
       tags,
+      email: email || req.user.email,
+      link: link || email || req.user.email,
       postedBy: req.user.id
     });
 
