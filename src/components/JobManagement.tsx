@@ -50,6 +50,7 @@ interface Job {
   urgent: boolean;
   applicationDeadline?: string;
   link?: string;
+  email?: string;
   tags: string[];
   createdAt: string;
   updatedAt?: string;
@@ -393,7 +394,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
       applicationDeadline: job.applicationDeadline ? job.applicationDeadline.split('T')[0] : '',
       tags: job.tags.length ? job.tags : [''],
       link: job.link || '',
-      email: job.postedByUser?.email || ''
+      email: job.email || ''
     });
     
     // Handle existing job image
