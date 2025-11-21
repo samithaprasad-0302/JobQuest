@@ -30,12 +30,6 @@ const GuestApplication = sequelize.define('GuestApplication', {
   companyName: {
     type: DataTypes.STRING
   },
-  companyId: {
-    type: DataTypes.UUID
-  },
-  applicationMessage: {
-    type: DataTypes.TEXT
-  },
   resume: {
     type: DataTypes.STRING
   },
