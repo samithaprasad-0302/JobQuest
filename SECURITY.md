@@ -98,10 +98,9 @@ If using social login, add these environment variables:
 
 ## 🔍 What Was Removed
 
-- ❌ Database password: `pass123`
-- ❌ Default JWT secret: `your-super-secret-key-change-this-in-production`
-- ❌ Hardcoded admin password: `SuperAdmin@123`
-- ❌ Hardcoded admin password: `Admin@123456`
+- ❌ Database password (hardcoded value)
+- ❌ Default JWT secret (placeholder value)
+- ❌ Hardcoded admin passwords (multiple instances)
 - ❌ Sample email credentials
 - ❌ Sample OAuth credentials
 
