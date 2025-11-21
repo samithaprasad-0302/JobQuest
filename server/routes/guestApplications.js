@@ -49,6 +49,7 @@ router.post('/', async (req, res) => {
     const guestApplication = await GuestApplication.create({
       guestEmail: email.toLowerCase(),
       guestName: `${firstName} ${lastName}`,
+      guestPhone: phone || '',
       jobId,
       applicationMessage: coverLetter || '',
       status: 'pending'

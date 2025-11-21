@@ -15,6 +15,9 @@ const GuestApplication = sequelize.define('GuestApplication', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  guestPhone: {
+    type: DataTypes.STRING
+  },
   jobId: {
     type: DataTypes.UUID,
     allowNull: false

@@ -397,10 +397,11 @@ router.get('/guest-applications/export/csv', adminAuth, async (req, res) => {
     });
 
     // Generate CSV content
-    const csvHeaders = ['Guest Name', 'Guest Email', 'Job Title', 'Job Category', 'Status', 'Message', 'Applied At'];
+    const csvHeaders = ['Guest Name', 'Guest Email', 'Guest Phone', 'Job Title', 'Job Category', 'Status', 'Message', 'Applied At'];
     const csvRows = applications.map(app => [
       app.guestName || '',
       app.guestEmail || '',
+      app.guestPhone || '',
       app.Job?.title || '',
       app.Job?.category || '',
       app.status || '',

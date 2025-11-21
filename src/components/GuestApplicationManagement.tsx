@@ -27,6 +27,7 @@ interface GuestApplication {
   id: string;
   guestEmail: string;
   guestName: string;
+  guestPhone?: string;
   jobId: string;
   companyId?: string;
   applicationMessage?: string;
@@ -328,6 +329,12 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                           <Mail className="h-3 w-3 mr-1" />
                           {application.guestEmail}
                         </span>
+                        {application.guestPhone && (
+                          <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <Phone className="h-3 w-3 mr-1" />
+                            {application.guestPhone}
+                          </span>
+                        )}
                         <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                           <Briefcase className="h-3 w-3 mr-1" />
                           {application.Job?.title || 'Job'}

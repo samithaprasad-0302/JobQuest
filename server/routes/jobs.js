@@ -509,21 +509,29 @@ router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), 
       console.log('✅ Job update succeeded, now fetching updated record...');
     } catch (updateError) {
       console.error('❌ Update failed with error:', updateError.message);
+      console.error('❌ Full error stack:', updateError.stack);
       return res.status(500).json({ message: 'Failed to update job', error: updateError.message });
     }
     
     console.log('📝 Job update initiated for ID:', req.params.id);
 
     // Fetch the updated job to return it
-    const jobResult = await Job.findByPk(req.params.id, {
-      include: [
-        { model: Company, attributes: ['name', 'logo', 'location', 'size', 'rating'] },
-        { model: User, as: 'postedByUser', attributes: ['firstName', 'lastName', 'email'] }
-      ]
-    });
+    try {
+      var jobResult = await Job.findByPk(req.params.id, {
+        include: [
+          { model: Company, attributes: ['name', 'logo', 'location', 'size', 'rating'] },
+          { model: User, as: 'postedByUser', attributes: ['firstName', 'lastName', 'email'] }
+        ]
+      });
+      console.log('✅ Job fetch succeeded, ID:', jobResult?.id || 'NULL RETURNED');
+    } catch (fetchError) {
+      console.error('❌ Fetch failed with error:', fetchError.message);
+      console.error('❌ Full error stack:', fetchError.stack);
+      return res.json({ message: 'Job updated successfully', id: req.params.id });
+    }
 
     if (!jobResult) {
-      console.error('⚠️ Job was updated but could not be fetched back');
+      console.error('⚠️ Job was updated but could not be fetched back - jobResult is null/undefined');
       return res.json({ message: 'Job updated successfully', id: req.params.id });
     }
 
