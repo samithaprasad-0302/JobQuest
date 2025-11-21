@@ -417,10 +417,14 @@ router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), 
 
     // Find the job to update
     const existingJob = await Job.findByPk(jobId);
-    console.log('🔍 Found job:', existingJob ? `ID: ${existingJob.id}, Title: ${existingJob.title}` : 'NOT FOUND');
+    console.log('🔍 Looking for job with ID:', jobId);
+    console.log('🔍 Job found:', existingJob ? `ID: ${existingJob.id}, Title: ${existingJob.title}` : 'NOT FOUND');
     
     if (!existingJob) {
       console.error('❌ Job not found with ID:', jobId);
+      // Try to list all jobs to debug
+      const allJobs = await Job.findAll({ limit: 5 });
+      console.error('📋 Available jobs:', allJobs.map(j => ({ id: j.id, title: j.title })));
       return res.status(404).json({ message: 'Job not found' });
     }
 

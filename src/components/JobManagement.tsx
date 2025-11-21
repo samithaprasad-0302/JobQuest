@@ -334,10 +334,13 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
       const method = editingJob ? 'PUT' : 'POST';
 
       console.log('📡 Making request to:', url, 'with method:', method);
+      console.log('🔍 Editing job ID:', editingJob?.id);
       console.log('📦 Form data being sent:', {
         title: formData.title,
         companyName: formData.companyName,
         link: formData.link,
+        email: formData.email,
+        applicationDeadline: formData.applicationDeadline,
         hasImage: !!jobImage
       });
 
