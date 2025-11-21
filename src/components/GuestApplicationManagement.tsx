@@ -8,7 +8,6 @@ import {
   ChevronDown,
   ChevronUp,
   Eye,
-  CheckCircle,
   XCircle,
   AlertCircle,
   Trash2,

@@ -777,8 +777,7 @@ Best regards,
                     
                     <button
                       onClick={() => {
-                        const emailBody = job?.applicationInstructions || 
-                          `Job Title: ${job.title}\nCompany: ${job.company?.name || job.companyName}\nEmail: ${job.link}`;
+                        const emailBody = `Job Title: ${job.title}\nCompany: ${job.company?.name || job.companyName}\nEmail: ${job.link}`;
                         copyToClipboard(emailBody);
                       }}
                       disabled={!job?.link}

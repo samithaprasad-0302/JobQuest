@@ -1,6 +1,16 @@
 const bcrypt = require('bcryptjs');
 const { User, sequelize } = require('../models');
 
+// Generate a random secure password
+function generateSecurePassword() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let password = '';
+  for (let i = 0; i < 16; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
+
 async function createAdminUsers() {
   try {
     // Connect to database
@@ -9,7 +19,7 @@ async function createAdminUsers() {
 
     // Create Super Admin
     const superAdminEmail = 'superadmin@jobquest.com';
-    const superAdminPassword = 'SuperAdmin@123';
+    const superAdminPassword = generateSecurePassword();
 
     let superAdmin = await User.findOne({ where: { email: superAdminEmail } });
     
@@ -31,7 +41,7 @@ async function createAdminUsers() {
 
     // Create Admin
     const adminEmail = 'admin@jobquest.com';
-    const adminPassword = 'Admin@123456';
+    const adminPassword = generateSecurePassword();
 
     let admin = await User.findOne({ where: { email: adminEmail } });
     
@@ -62,6 +72,8 @@ async function createAdminUsers() {
     console.log(`  Email: ${adminEmail}`);
     console.log(`  Password: ${adminPassword}`);
     console.log('─────────────────────────────────────');
+    console.log('\n⚠️  IMPORTANT: Save these credentials securely!');
+    console.log('⚠️  Change passwords immediately after first login!');
 
     await sequelize.close();
     console.log('\n✅ Database connection closed');
