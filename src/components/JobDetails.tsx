@@ -86,12 +86,13 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
 
   const fetchJobDetails = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/jobs/${id}`);
+      const response = await fetch(`http://localhost:5000/api/jobs/${id}?t=${Date.now()}`);
       if (!response.ok) {
         throw new Error('Job not found');
       }
       const data = await response.json();
       setJob(data);
+      console.log('Job fetched:', data);
     } catch (error) {
       console.error('Error fetching job details:', error);
       setError('Failed to load job details');
