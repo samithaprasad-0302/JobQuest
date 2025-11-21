@@ -235,7 +235,8 @@ router.post('/admin', adminAuth[0], adminAuth[1], upload.single('jobImage'), asy
       urgent,
       applicationDeadline,
       tags,
-      link
+      link,
+      email
     } = req.body;
 
     // Parse JSON strings back to arrays/objects with error handling
