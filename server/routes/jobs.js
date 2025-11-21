@@ -503,21 +503,23 @@ router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), 
       linkInUpdateData: updateData.link
     });
 
-    const updatedJob = await Job.update(
-      updateData, 
-      { where: { id: req.params.id }, returning: true }
-    );
+    // Update the job
+    await existingJob.update(updateData);
+    
+    console.log('📝 Job update initiated for ID:', req.params.id);
 
-    if (!updatedJob[0]) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-
+    // Fetch the updated job to return it
     const jobResult = await Job.findByPk(req.params.id, {
       include: [
         { model: Company, attributes: ['name', 'logo', 'location', 'size', 'rating'] },
         { model: User, as: 'postedByUser', attributes: ['firstName', 'lastName', 'email'] }
       ]
     });
+
+    if (!jobResult) {
+      console.error('⚠️ Job was updated but could not be fetched back');
+      return res.json({ message: 'Job updated successfully', id: req.params.id });
+    }
 
     console.log('✅ Job updated successfully:', jobResult.id);
     res.json(jobResult);
