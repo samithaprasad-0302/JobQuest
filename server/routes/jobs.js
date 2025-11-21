@@ -504,7 +504,13 @@ router.put('/admin/:id', adminAuth[0], adminAuth[1], upload.single('jobImage'), 
     });
 
     // Update the job
-    await existingJob.update(updateData);
+    try {
+      const updateResult = await existingJob.update(updateData);
+      console.log('✅ Job update succeeded, now fetching updated record...');
+    } catch (updateError) {
+      console.error('❌ Update failed with error:', updateError.message);
+      return res.status(500).json({ message: 'Failed to update job', error: updateError.message });
+    }
     
     console.log('📝 Job update initiated for ID:', req.params.id);
 
