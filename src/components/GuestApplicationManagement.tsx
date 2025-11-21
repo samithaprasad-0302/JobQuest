@@ -25,15 +25,18 @@ import {
 
 interface GuestApplication {
   id: string;
-  guestEmail: string;
-  guestName: string;
-  guestPhone?: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
   jobId: string;
-  companyId?: string;
-  applicationMessage?: string;
-  resume?: string;
+  jobTitle?: string;
+  companyName?: string;
   coverLetter?: string;
+  resume?: any;
   status: 'pending' | 'reviewed' | 'rejected';
+  ipAddress?: string;
+  userAgent?: string;
   appliedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -41,10 +44,6 @@ interface GuestApplication {
     id: string;
     title: string;
     category: string;
-  };
-  Company?: {
-    id: string;
-    name: string;
   };
 }
 
@@ -315,29 +314,29 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                     <div className="flex-shrink-0">
                       <div className={`w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center`}>
                         <span className="text-white font-medium text-sm">
-                          {application.guestName.charAt(0)}{application.guestName.length > 1 ? application.guestName.split(' ')[1]?.charAt(0) || 'G' : 'G'}
+                          {application.firstName.charAt(0)}{application.lastName.charAt(0)}
                         </span>
                       </div>
                     </div>
                     
                     <div className="flex-1 min-w-0">
                       <h3 className={`font-medium truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {application.guestName}
+                        {application.firstName} {application.lastName}
                       </h3>
                       <div className="flex items-center space-x-4 text-sm">
                         <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                           <Mail className="h-3 w-3 mr-1" />
-                          {application.guestEmail}
+                          {application.email}
                         </span>
-                        {application.guestPhone && (
+                        {application.phone && (
                           <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                             <Phone className="h-3 w-3 mr-1" />
-                            {application.guestPhone}
+                            {application.phone}
                           </span>
                         )}
                         <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                           <Briefcase className="h-3 w-3 mr-1" />
-                          {application.Job?.title || 'Job'}
+                          {application.jobTitle || application.Job?.title || 'Job'}
                         </span>
                         <span className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                           <Building className="h-3 w-3 mr-1" />
@@ -384,19 +383,6 @@ const GuestApplicationManagement: React.FC<GuestApplicationManagementProps> = ({
                           Application Details
                         </h4>
                         
-                        {application.applicationMessage && (
-                          <div>
-                            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              Application Message
-                            </label>
-                            <div className={`p-3 rounded-lg text-sm ${
-                              darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-50 text-gray-700'
-                            }`}>
-                              {application.applicationMessage}
-                            </div>
-                          </div>
-                        )}
-
                         {application.coverLetter && (
                           <div>
                             <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
