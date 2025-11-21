@@ -5,6 +5,8 @@ const { GuestApplication, Job } = require('../models');
 // POST /api/guest-applications - Submit a guest application
 router.post('/', async (req, res) => {
   try {
+    console.log('📋 Incoming guest application request body:', req.body);
+    
     const {
       email,
       firstName,
@@ -13,9 +15,16 @@ router.post('/', async (req, res) => {
       jobId,
       jobTitle,
       companyName,
-      coverLetter,
-      resume
+      coverLetter
     } = req.body;
+
+    console.log('📱 Extracted fields:', {
+      email,
+      firstName,
+      lastName,
+      phone,
+      jobId
+    });
 
     // Validate required fields
     if (!email || !firstName || !lastName || !jobId) {
@@ -33,7 +42,7 @@ router.post('/', async (req, res) => {
     // Check for duplicate application (same email + job)
     const existingApplication = await GuestApplication.findOne({
       where: {
-        email: email.toLowerCase(),
+        guestEmail: email.toLowerCase(),
         jobId: jobId
       }
     });
@@ -46,25 +55,24 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Get IP address and user agent
-    const ipAddress = req.ip || req.headers['x-forwarded-for'] || '::1';
-    const userAgent = req.headers['user-agent'] || '';
-
     // Create new guest application
-    const guestApplication = await GuestApplication.create({
-      email: email.toLowerCase(),
-      firstName,
-      lastName,
-      phone: phone || '',
-      jobId,
-      jobTitle: jobTitle || (job?.title || ''),
-      companyName: companyName || (job?.company?.name || ''),
-      coverLetter: coverLetter || '',
-      resume: resume || null,
-      status: 'pending',
-      ipAddress,
-      userAgent
+    console.log('💾 Creating guest application with data:', {
+      guestEmail: email.toLowerCase(),
+      guestName: `${firstName} ${lastName}`,
+      guestPhone: phone || '',
+      jobId
     });
+
+    const guestApplication = await GuestApplication.create({
+      guestEmail: email.toLowerCase(),
+      guestName: `${firstName} ${lastName}`,
+      guestPhone: phone || '',
+      jobId,
+      applicationMessage: coverLetter || '',
+      status: 'pending'
+    });
+
+    console.log('✅ Guest application created successfully:', guestApplication.toJSON());
 
     res.status(201).json({
       message: 'Application submitted successfully',
@@ -95,7 +103,7 @@ router.get('/by-email/:email', async (req, res) => {
     }
 
     const applications = await GuestApplication.findAll({
-      where: { email: email.toLowerCase() },
+      where: { guestEmail: email.toLowerCase() },
       include: [{ model: Job }],
       order: [['appliedAt', 'DESC']]
     });

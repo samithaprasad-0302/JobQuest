@@ -7,46 +7,36 @@ const GuestApplication = sequelize.define('GuestApplication', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
-  email: {
+  guestEmail: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  firstName: {
+  guestName: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  lastName: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  phone: {
+  guestPhone: {
     type: DataTypes.STRING
   },
   jobId: {
     type: DataTypes.UUID,
     allowNull: false
   },
-  jobTitle: {
-    type: DataTypes.STRING
+  companyId: {
+    type: DataTypes.UUID
   },
-  companyName: {
+  applicationMessage: {
+    type: DataTypes.TEXT
+  },
+  resume: {
     type: DataTypes.STRING
   },
   coverLetter: {
     type: DataTypes.TEXT
   },
-  resume: {
-    type: DataTypes.JSON
-  },
   status: {
     type: DataTypes.ENUM('pending', 'reviewed', 'rejected'),
     defaultValue: 'pending'
-  },
-  ipAddress: {
-    type: DataTypes.STRING
-  },
-  userAgent: {
-    type: DataTypes.TEXT
   },
   appliedAt: {
     type: DataTypes.DATE,
