@@ -38,17 +38,12 @@ router.post('/', auth, async (req, res) => {
       });
     }
     
-    // Create new application
+    // Create new application with only valid fields
     const application = await Application.create({
       userId: req.user.id,
       jobId: jobId,
-      jobTitle: job.title,
-      companyName: job.Company?.name || job.companyName,
-      applicationMethod: applicationMethod,
-      contactEmail: contactEmail,
-      emailSubject: emailSubject,
-      emailBody: emailBody,
-      notes: notes
+      applicationMessage: emailBody || notes || null,
+      status: 'pending'
     });
     
     // Populate the job details for response
