@@ -20,16 +20,13 @@ router.post('/', async (req, res) => {
 
     console.log('📱 Extracted fields:', {
       email,
-      firstName,
-      lastName,
-      phone,
       jobId
     });
 
     // Validate required fields
-    if (!email || !firstName || !lastName || !jobId) {
+    if (!email || !jobId) {
       return res.status(400).json({
-        error: 'Missing required fields: email, firstName, lastName, jobId'
+        error: 'Missing required fields: email, jobId'
       });
     }
 
@@ -42,7 +39,7 @@ router.post('/', async (req, res) => {
     // Check for duplicate application (same email + job)
     const existingApplication = await GuestApplication.findOne({
       where: {
-        guestEmail: email.toLowerCase(),
+        email: email.toLowerCase(),
         jobId: jobId
       }
     });
@@ -57,18 +54,17 @@ router.post('/', async (req, res) => {
 
     // Create new guest application
     console.log('💾 Creating guest application with data:', {
-      guestEmail: email.toLowerCase(),
-      guestName: `${firstName} ${lastName}`,
-      guestPhone: phone || '',
-      jobId
+      email: email.toLowerCase(),
+      phone: phone || '',
+      jobId,
+      coverLetter: coverLetter || ''
     });
 
     const guestApplication = await GuestApplication.create({
-      guestEmail: email.toLowerCase(),
-      guestName: `${firstName} ${lastName}`,
-      guestPhone: phone || '',
+      email: email.toLowerCase(),
+      phone: phone || '',
       jobId,
-      applicationMessage: coverLetter || '',
+      coverLetter: coverLetter || '',
       status: 'pending'
     });
 

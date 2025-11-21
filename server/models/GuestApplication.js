@@ -7,15 +7,11 @@ const GuestApplication = sequelize.define('GuestApplication', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
-  guestEmail: {
+  email: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  guestName: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  guestPhone: {
+  phone: {
     type: DataTypes.STRING
   },
   jobId: {
