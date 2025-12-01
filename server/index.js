@@ -60,6 +60,9 @@ app.use('/api/uploads', (req, res, next) => {
   next();
 }, express.static(path.join(__dirname, 'uploads')));
 
+// Serve static files from dist folder (React frontend) - MUST be before API routes
+app.use(express.static(path.join(__dirname, '../dist')));
+
 // MySQL connection with Sequelize
 const initializeDatabase = async (retryCount = 0) => {
   const maxRetries = 5;
@@ -123,17 +126,6 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/contact', contactRoutes);
 
-// Serve static files from dist folder (React frontend)
-app.use(express.static(path.join(__dirname, '../dist')));
-
-// SPA fallback: serve index.html for all non-API routes
-app.get('*', (req, res) => {
-  // Don't override API routes - they're already handled above
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
-  }
-});
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -141,6 +133,11 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     database: sequelize.authenticate() ? 'Connected' : 'Disconnected'
   });
+});
+
+// SPA fallback: serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 // Error handling middleware
