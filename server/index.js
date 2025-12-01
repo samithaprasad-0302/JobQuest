@@ -123,6 +123,17 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/contact', contactRoutes);
 
+// Serve static files from dist folder (React frontend)
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// SPA fallback: serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  // Don't override API routes - they're already handled above
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -139,11 +150,6 @@ app.use((err, req, res, next) => {
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : {}
   });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
 });
 
 app.listen(PORT, () => {
