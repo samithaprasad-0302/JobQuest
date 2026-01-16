@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: jobquest-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 3306
+      - key: DB_NAME
+        value: jobquest
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLIENT_URL
+        value: https://jobquestlk.me
+    healthCheckPath: /api/health
+    autoDeploy: true
