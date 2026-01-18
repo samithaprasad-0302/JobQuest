@@ -51,7 +51,8 @@ const GuestApplication = sequelize.define('GuestApplication', {
     type: DataTypes.STRING
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  tableName: 'GuestApplications'
 });
 
 module.exports = GuestApplication;
