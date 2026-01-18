@@ -5,7 +5,7 @@ const Job = require('./Job');
 const Contact = require('./Contact');
 const Application = require('./Application');
 const Newsletter = require('./Newsletter');
-const GuestApplication = require('./GuestApplication');
+const GuestApplication = require('./GuestApplications');
 
 // Define associations
 User.hasMany(Application, { foreignKey: 'userId' });
