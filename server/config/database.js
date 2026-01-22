@@ -1,5 +1,8 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 // Create Sequelize instance
 const sequelize = new Sequelize(
@@ -8,14 +11,15 @@ const sequelize = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
+    port: Number(process.env.DB_PORT || 3306),
     dialect: 'mysql',
     logging: false
   }
 );
 
-sequelize.authenticate()
-  .then(() => console.log('✅ Connected to Hostinger MySQL'))
-  .catch(err => console.error('❌ DB connection failed:', err));
+sequelize
+  .authenticate()
+  .then(() => console.log('✅ Connected to MySQL'))
+  .catch((err) => console.error('❌ DB connection failed:', err));
 
 module.exports = sequelize;
