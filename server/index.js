@@ -60,20 +60,14 @@ app.use('/api/uploads', (req, res, next) => {
   next();
 }, express.static(path.join(__dirname, 'uploads')));
 
-// Serve static files from dist folder (React frontend) - MUST be before API routes
-app.use(express.static(path.join(__dirname, '../dist')));
+// Frontend is served separately from the frontend deployment
 
 // MySQL connection with Sequelize
 const initializeDatabase = async (retryCount = 0) => {
   const maxRetries = 5;
   try {
     await sequelize.authenticate();
-    console.log('🔄 Connecting to MySQL...');
     console.log('✅ Connected to MySQL');
-    
-    // Sync all models
-    await sequelize.sync({ alter: false });
-    console.log('✅ Database models synchronized');
     return;
   } catch (error) {
     console.error(`❌ MySQL connection error (attempt ${retryCount + 1}/${maxRetries}):`, error.message);
@@ -135,10 +129,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// SPA fallback: serve index.html for all non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
-});
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
