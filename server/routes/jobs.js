@@ -9,26 +9,39 @@ const { adminAuth } = require('../middleware/adminAuth');
 
 const router = express.Router();
 
+// Helper function to ensure array fields are always arrays
+const ensureArray = (field) => {
+  if (!field) return [];
+  if (typeof field === 'string') {
+    return field.split(',').map(s => s.trim()).filter(s => s);
+  }
+  if (Array.isArray(field)) {
+    return field;
+  }
+  return [];
+};
+
 // Helper function to ensure skills is always an array
 const fixJobSkills = (job) => {
   if (!job) return job;
   
   const jobData = job.toJSON ? job.toJSON() : job;
+  jobData.skills = ensureArray(jobData.skills);
   
-  if (jobData.skills) {
-    if (typeof jobData.skills === 'string') {
-      // Split comma-separated string and trim whitespace
-      jobData.skills = jobData.skills.split(',').map(s => s.trim());
-    } else if (Array.isArray(jobData.skills)) {
-      // Already an array, keep as is
-      jobData.skills = jobData.skills;
-    } else {
-      // Invalid format, set to empty array
-      jobData.skills = [];
-    }
-  } else {
-    jobData.skills = [];
-  }
+  return jobData;
+};
+
+// Helper to fix all array fields
+const fixJobArrays = (job) => {
+  if (!job) return job;
+  
+  const jobData = job.toJSON ? job.toJSON() : job;
+  
+  // Fix all array fields
+  jobData.skills = ensureArray(jobData.skills);
+  jobData.requirements = ensureArray(jobData.requirements);
+  jobData.responsibilities = ensureArray(jobData.responsibilities);
+  jobData.benefits = ensureArray(jobData.benefits);
   
   return jobData;
 };
@@ -36,9 +49,9 @@ const fixJobSkills = (job) => {
 // Helper to fix skills in job array
 const fixJobsArray = (jobs) => {
   if (Array.isArray(jobs)) {
-    return jobs.map(fixJobSkills);
+    return jobs.map(job => fixJobArrays(job));
   }
-  return fixJobSkills(jobs);
+  return fixJobArrays(jobs);
 };
 
 // Helper function to convert image object to proper URL
@@ -66,9 +79,9 @@ const fixJobImage = (job) => {
   return jobData;
 };
 
-// Helper to apply both fixes
+// Helper to apply all fixes
 const fixJobData = (job) => {
-  return fixJobImage(fixJobSkills(job));
+  return fixJobImage(fixJobArrays(job));
 };
 
 // Helper to fix array of jobs

@@ -547,7 +547,7 @@ Best regards,
               )}
 
               {/* Requirements */}
-              {job.requirements && job.requirements.length > 0 && (
+              {Array.isArray(job.requirements) && job.requirements.length > 0 && (
                 <div className="mb-8">
                   <div className="flex items-center space-x-2 mb-4">
                     <CheckCircle className={`w-5 h-5 ${darkMode ? 'text-green-400' : 'text-green-600'}`} />
@@ -569,7 +569,7 @@ Best regards,
               )}
 
               {/* Responsibilities */}
-              {job.responsibilities && job.responsibilities.length > 0 && (
+              {Array.isArray(job.responsibilities) && job.responsibilities.length > 0 && (
                 <div className="mb-8">
                   <div className="flex items-center space-x-2 mb-4">
                     <Target className={`w-5 h-5 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`} />
@@ -617,7 +617,7 @@ Best regards,
               )}
 
               {/* Benefits */}
-              {job.benefits && job.benefits.length > 0 && (
+              {Array.isArray(job.benefits) && job.benefits.length > 0 && (
                 <div>
                   <div className="flex items-center space-x-2 mb-4">
                     <Award className={`w-5 h-5 ${darkMode ? 'text-teal-400' : 'text-teal-600'}`} />
