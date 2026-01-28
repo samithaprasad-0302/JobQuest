@@ -32,6 +32,7 @@ interface Job {
     filename: string;
     originalName: string;
   };
+  imageUrl?: string | null;
 }
 
 interface AllJobsProps {

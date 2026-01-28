@@ -54,6 +54,7 @@ interface Job {
     path: string;
     uploadDate: string;
   };
+  imageUrl?: string | null;
 }
 
 interface JobDetailsProps {
