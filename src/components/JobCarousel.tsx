@@ -33,6 +33,7 @@ interface Job {
     path: string;
     uploadDate: string;
   };
+  imageUrl?: string | null;
 }
 
 interface JobCarouselProps {
@@ -458,27 +459,28 @@ const JobCarousel: React.FC<JobCarouselProps> = ({ darkMode }) => {
                   </div>
 
                   {/* Job Image - Center */}
-                  {job.image && (
+                  {job.imageUrl ? (
                     <div className="mb-2 md:mb-3">
                       <img
-                        src={
-                          typeof job.image === 'string' 
-                            ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
-                            : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image.filename}`
-                        }
+                        src={`https://jobquest-backend-36x6.onrender.com${job.imageUrl}`}
                         alt="Job post"
                         className="w-full h-20 md:h-32 object-cover rounded-lg"
                         onLoad={() => {
                           console.log('✅ Job image loaded successfully');
                         }}
                         onError={(e) => {
-                          const imageUrl = typeof job.image === 'string' 
-                            ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
-                            : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image?.filename}`;
-                          console.error('❌ Image failed to load:', imageUrl);
+                          console.error('❌ Image failed to load:', job.imageUrl);
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}
                       />
+                    </div>
+                  ) : (
+                    <div className={`mb-2 md:mb-3 w-full h-20 md:h-32 rounded-lg flex items-center justify-center ${
+                      darkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    }`}>
+                      <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        No Image
+                      </span>
                     </div>
                   )}
 
