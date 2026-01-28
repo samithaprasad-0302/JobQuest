@@ -1,5 +1,5 @@
 // API utility functions
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://jobquest-backend-36x6.onrender.com';
 
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('jobquest_token');

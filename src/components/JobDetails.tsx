@@ -86,7 +86,7 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
 
   const fetchJobDetails = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/jobs/${id}?t=${Date.now()}`);
+      const response = await fetch(`https://jobquest-backend-36x6.onrender.com/api/jobs/${id}?t=${Date.now()}`);
       if (!response.ok) {
         throw new Error('Job not found');
       }
@@ -106,8 +106,8 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
     
     try {
       const imageUrl = typeof job.image === 'string' 
-        ? `http://localhost:5000${job.image}` 
-        : `http://localhost:5000/api/uploads/jobs/${job.image.filename}`;
+        ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
+        : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image.filename}`;
       
       const response = await fetch(imageUrl);
       const blob = await response.blob();
@@ -387,8 +387,8 @@ Best regards,
                 <img
                   src={
                     typeof job.image === 'string' 
-                      ? `http://localhost:5000${job.image}` 
-                      : `http://localhost:5000/api/uploads/jobs/${job.image.filename}`
+                      ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
+                      : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image.filename}`
                   }
                   alt="Job Poster"
                   className="w-full max-w-3xl h-auto rounded-lg shadow-lg object-contain bg-gray-100 dark:bg-gray-700"

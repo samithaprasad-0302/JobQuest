@@ -25,7 +25,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "http://localhost:5000", "http://localhost:5173"],
+      imgSrc: ["'self'", "data:", "http://localhost:5000", "http://localhost:5173", "https://jobquestlk.me"],
       styleSrc: ["'self'", "'unsafe-inline'", "https:"],
       scriptSrc: ["'self'"],
       objectSrc: ["'none'"],
@@ -43,12 +43,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
-const cors_options = require('cors');
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+const corsOptions = {
+  origin: [process.env.CLIENT_URL || 'http://localhost:5173', 'https://jobquestlk.me'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -56,7 +57,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static files from uploads directory with CORS headers
 app.use('/api/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || 'http://localhost:5173');
+  const allowedOrigins = [process.env.CLIENT_URL || 'http://localhost:5173', 'https://jobquestlk.me'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   next();

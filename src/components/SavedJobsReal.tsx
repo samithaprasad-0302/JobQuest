@@ -386,8 +386,8 @@ const SavedJobsReal: React.FC<SavedJobsProps> = ({ darkMode }) => {
                       <img
                         src={
                           typeof job.image === 'string' 
-                            ? `http://localhost:5000${job.image}` 
-                            : `http://localhost:5000/api/uploads/jobs/${job.image.filename}`
+                            ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
+                            : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image.filename}`
                         }
                         alt="Job post"
                         className="w-full h-16 md:h-32 object-cover rounded-md md:rounded-lg"
@@ -396,8 +396,8 @@ const SavedJobsReal: React.FC<SavedJobsProps> = ({ darkMode }) => {
                         }}
                         onError={(e) => {
                           const imageUrl = typeof job.image === 'string' 
-                            ? `http://localhost:5000${job.image}` 
-                            : `http://localhost:5000/api/uploads/jobs/${job.image?.filename}`;
+                            ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
+                            : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image?.filename}`;
                           console.error('❌ Image failed to load:', imageUrl);
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}

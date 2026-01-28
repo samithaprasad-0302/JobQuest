@@ -130,7 +130,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
   const fetchJobs = async () => {
     try {
       const token = localStorage.getItem('jobquest_token');
-      const response = await fetch('http://localhost:5000/api/jobs/admin', {
+      const response = await fetch('https://jobquest-backend-36x6.onrender.com/api/jobs/admin', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -328,8 +328,8 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
       }
 
       const url = editingJob 
-        ? `http://localhost:5000/api/jobs/admin/${editingJob.id}`
-        : 'http://localhost:5000/api/jobs/admin';
+        ? `https://jobquest-backend-36x6.onrender.com/api/jobs/admin/${editingJob.id}`
+        : 'https://jobquest-backend-36x6.onrender.com/api/jobs/admin';
       
       const method = editingJob ? 'PUT' : 'POST';
 
@@ -403,9 +403,9 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
     // Handle existing job image
     if (job.image) {
       if (typeof job.image === 'string') {
-        setImagePreview(`http://localhost:5000${job.image}`);
+        setImagePreview(`https://jobquest-backend-36x6.onrender.com${job.image}`);
       } else {
-        setImagePreview(`http://localhost:5000/api/uploads/jobs/${job.image.filename}`);
+        setImagePreview(`https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image.filename}`);
       }
     }
     
@@ -417,7 +417,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ darkMode }) => {
 
     try {
       const token = localStorage.getItem('jobquest_token');
-      const response = await fetch(`http://localhost:5000/api/jobs/admin/${jobId}`, {
+      const response = await fetch(`https://jobquest-backend-36x6.onrender.com/api/jobs/admin/${jobId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

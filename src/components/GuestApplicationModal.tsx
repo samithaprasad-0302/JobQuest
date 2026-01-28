@@ -63,7 +63,7 @@ const GuestApplicationModal: React.FC<GuestApplicationModalProps> = ({
         companyName: job.company
       };
 
-      const response = await fetch('http://localhost:5000/api/guest-applications', {
+      const response = await fetch('https://jobquest-backend-36x6.onrender.com/api/guest-applications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

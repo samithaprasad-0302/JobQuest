@@ -99,7 +99,7 @@ const JobCarousel: React.FC<JobCarouselProps> = ({ darkMode }) => {
   const fetchFeaturedJobs = async () => {
     try {
       console.log('🔍 Fetching jobs from API...');
-      const response = await fetch('http://localhost:5000/api/jobs');
+      const response = await fetch('https://jobquest-backend-36x6.onrender.com/api/jobs');
       if (!response.ok) {
         throw new Error('Failed to fetch jobs');
       }
@@ -463,8 +463,8 @@ const JobCarousel: React.FC<JobCarouselProps> = ({ darkMode }) => {
                       <img
                         src={
                           typeof job.image === 'string' 
-                            ? `http://localhost:5000${job.image}` 
-                            : `http://localhost:5000/api/uploads/jobs/${job.image.filename}`
+                            ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
+                            : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image.filename}`
                         }
                         alt="Job post"
                         className="w-full h-20 md:h-32 object-cover rounded-lg"
@@ -473,8 +473,8 @@ const JobCarousel: React.FC<JobCarouselProps> = ({ darkMode }) => {
                         }}
                         onError={(e) => {
                           const imageUrl = typeof job.image === 'string' 
-                            ? `http://localhost:5000${job.image}` 
-                            : `http://localhost:5000/api/uploads/jobs/${job.image?.filename}`;
+                            ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
+                            : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image?.filename}`;
                           console.error('❌ Image failed to load:', imageUrl);
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}
