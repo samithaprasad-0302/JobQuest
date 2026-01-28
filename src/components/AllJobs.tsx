@@ -583,7 +583,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
                       
                       return skillsArray && skillsArray.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {skillsArray.slice(0, 2).map((skill) => (
+                          {skillsArray.slice(0, 2).map((skill: string) => (
                             <span
                               key={skill}
                               className={`px-1 py-0.5 md:px-2 md:py-1 text-xs rounded ${
