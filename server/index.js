@@ -75,6 +75,10 @@ const initializeDatabase = async (retryCount = 0) => {
   try {
     await sequelize.authenticate();
     console.log('✅ Connected to MySQL');
+    
+    // Sync models to create tables if they don't exist
+    await sequelize.sync({ alter: false });
+    console.log('✅ Database tables synchronized');
     return;
   } catch (error) {
     console.error(`❌ MySQL connection error (attempt ${retryCount + 1}/${maxRetries}):`, error.message);
