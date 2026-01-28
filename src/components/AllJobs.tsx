@@ -566,31 +566,47 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
 
                   {/* Skills - Very compact on mobile - Fixed Height */}
                   <div className="mb-2 md:mb-4 min-h-[20px] md:min-h-[32px] flex-1">
-                    {job.skills && job.skills.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {job.skills.slice(0, 2).map((skill) => (
-                          <span
-                            key={skill}
-                            className={`px-1 py-0.5 md:px-2 md:py-1 text-xs rounded ${
-                              darkMode 
-                                ? 'bg-gray-700 text-gray-300' 
-                                : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                        {job.skills.length > 2 && (
-                          <span className={`px-1 py-0.5 text-xs ${
-                            darkMode ? 'text-gray-400' : 'text-gray-500'
-                          }`}>
-                            +{job.skills.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="h-4 md:h-6"></div>
-                    )}
+                    {(() => {
+                      // Safely parse skills if it's a string
+                      let skillsArray = [];
+                      if (job.skills) {
+                        if (typeof job.skills === 'string') {
+                          try {
+                            skillsArray = JSON.parse(job.skills);
+                          } catch {
+                            skillsArray = [];
+                          }
+                        } else if (Array.isArray(job.skills)) {
+                          skillsArray = job.skills;
+                        }
+                      }
+                      
+                      return skillsArray && skillsArray.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {skillsArray.slice(0, 2).map((skill) => (
+                            <span
+                              key={skill}
+                              className={`px-1 py-0.5 md:px-2 md:py-1 text-xs rounded ${
+                                darkMode 
+                                  ? 'bg-gray-700 text-gray-300' 
+                                  : 'bg-gray-100 text-gray-700'
+                              }`}
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                          {skillsArray.length > 2 && (
+                            <span className={`px-1 py-0.5 text-xs ${
+                              darkMode ? 'text-gray-400' : 'text-gray-500'
+                            }`}>
+                              +{skillsArray.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="h-4 md:h-6"></div>
+                      );
+                    })()}
                   </div>
 
                   {/* Action Buttons - Always at bottom of card */}
