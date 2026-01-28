@@ -41,6 +41,42 @@ const fixJobsArray = (jobs) => {
   return fixJobSkills(jobs);
 };
 
+// Helper function to convert image object to proper URL
+const fixJobImage = (job) => {
+  if (!job) return job;
+  
+  const jobData = job.toJSON ? job.toJSON() : job;
+  
+  if (jobData.image) {
+    if (typeof jobData.image === 'object' && jobData.image.filename) {
+      // Convert object to URL: /api/uploads/jobs/filename
+      jobData.imageUrl = `/api/uploads/jobs/${jobData.image.filename}`;
+    } else if (typeof jobData.image === 'string') {
+      // Already a string path, use as is
+      jobData.imageUrl = jobData.image.startsWith('/') ? jobData.image : `/${jobData.image}`;
+    } else {
+      jobData.imageUrl = null;
+    }
+  } else {
+    jobData.imageUrl = null;
+  }
+  
+  return jobData;
+};
+
+// Helper to apply both fixes
+const fixJobData = (job) => {
+  return fixJobImage(fixJobSkills(job));
+};
+
+// Helper to fix array of jobs
+const fixJobsData = (jobs) => {
+  if (Array.isArray(jobs)) {
+    return jobs.map(fixJobData);
+  }
+  return fixJobData(jobs);
+};
+
 // Configure multer for job image uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -147,8 +183,8 @@ router.get('/', async (req, res) => {
     // Get total count for pagination
     const total = await Job.count({ where });
 
-    // Fix skills in all jobs
-    const fixedJobs = fixJobsArray(jobs);
+    // Fix skills and images in all jobs
+    const fixedJobs = fixJobsData(jobs);
 
     res.json({
       jobs: fixedJobs,
@@ -177,8 +213,8 @@ router.get('/featured', async (req, res) => {
       limit: 6
     });
 
-    // Fix skills in all jobs
-    const fixedJobs = fixJobsArray(jobs);
+    // Fix skills and images in all jobs
+    const fixedJobs = fixJobsData(jobs);
 
     res.json(fixedJobs);
   } catch (error) {
@@ -676,8 +712,8 @@ router.get('/:id', async (req, res) => {
     job.views = (job.views || 0) + 1;
     await job.save();
 
-    // Fix skills before returning
-    const fixedJob = fixJobSkills(job);
+    // Fix skills and images before returning
+    const fixedJob = fixJobData(job);
 
     res.json(fixedJob);
   } catch (error) {

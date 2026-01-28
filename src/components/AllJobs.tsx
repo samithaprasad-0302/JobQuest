@@ -455,23 +455,16 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
 
                   {/* Job Image - Compact for mobile - Fixed Height */}
                   <div className="mb-1 md:mb-3 min-h-[64px] md:min-h-[128px]">
-                    {job.image ? (
+                    {job.imageUrl ? (
                       <img
-                        src={
-                          typeof job.image === 'string' 
-                            ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
-                            : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image.filename}`
-                        }
+                        src={job.imageUrl}
                         alt="Job post"
                         className="w-full h-16 md:h-32 object-cover rounded-md md:rounded-lg"
                         onLoad={() => {
                           console.log('✅ Job image loaded successfully');
                         }}
                         onError={(e) => {
-                          const imageUrl = typeof job.image === 'string' 
-                            ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
-                            : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image?.filename}`;
-                          console.error('❌ Image failed to load:', imageUrl);
+                          console.error('❌ Image failed to load:', job.imageUrl);
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}
                       />

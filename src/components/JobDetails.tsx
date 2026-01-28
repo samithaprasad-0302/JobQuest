@@ -102,12 +102,12 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
   };
 
   const downloadJobPoster = async () => {
-    if (!job?.image) return;
+    if (!job?.imageUrl) return;
     
     try {
-      const imageUrl = typeof job.image === 'string' 
-        ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
-        : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image.filename}`;
+      const imageUrl = job.imageUrl.startsWith('http') 
+        ? job.imageUrl 
+        : `https://jobquest-backend-36x6.onrender.com${job.imageUrl}`;
       
       const response = await fetch(imageUrl);
       const blob = await response.blob();
@@ -120,9 +120,7 @@ const JobDetails: React.FC<JobDetailsProps> = ({ darkMode }) => {
       // Generate filename
       const jobTitle = job.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const companyName = (job.company?.name || job.companyName || 'company').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const extension = typeof job.image === 'object' && job.image.filename 
-        ? job.image.filename.split('.').pop() 
-        : 'jpg';
+      const extension = job.imageUrl.split('.').pop() || 'jpg';
       
       link.download = `${jobTitle}_${companyName}_job_poster.${extension}`;
       
@@ -381,14 +379,14 @@ Best regards,
           </div>
 
           {/* Job Poster Image - Large Display */}
-          {job.image && (
+          {job.imageUrl && (
             <div className="mb-8 relative">
               <div className="flex justify-center">
                 <img
                   src={
-                    typeof job.image === 'string' 
-                      ? `https://jobquest-backend-36x6.onrender.com${job.image}` 
-                      : `https://jobquest-backend-36x6.onrender.com/api/uploads/jobs/${job.image.filename}`
+                    job.imageUrl.startsWith('http') 
+                      ? job.imageUrl 
+                      : `https://jobquest-backend-36x6.onrender.com${job.imageUrl}`
                   }
                   alt="Job Poster"
                   className="w-full max-w-3xl h-auto rounded-lg shadow-lg object-contain bg-gray-100 dark:bg-gray-700"
