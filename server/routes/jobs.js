@@ -61,15 +61,29 @@ const fixJobImage = (job) => {
   const jobData = job.toJSON ? job.toJSON() : job;
   
   if (jobData.image) {
-    if (typeof jobData.image === 'object' && jobData.image.filename) {
+    let imageObj = jobData.image;
+    
+    // If image is a JSON string, parse it
+    if (typeof imageObj === 'string') {
+      try {
+        // Try to parse as JSON
+        imageObj = JSON.parse(imageObj);
+      } catch {
+        // If not valid JSON, treat as a file path
+        jobData.imageUrl = imageObj.startsWith('/') ? imageObj : `/${imageObj}`;
+        delete jobData.image;
+        return jobData;
+      }
+    }
+    
+    // Now imageObj should be an object with filename property
+    if (typeof imageObj === 'object' && imageObj.filename) {
       // Convert object to URL: /api/uploads/jobs/filename
-      jobData.imageUrl = `/api/uploads/jobs/${jobData.image.filename}`;
-    } else if (typeof jobData.image === 'string') {
-      // Already a string path, use as is
-      jobData.imageUrl = jobData.image.startsWith('/') ? jobData.image : `/${jobData.image}`;
+      jobData.imageUrl = `/api/uploads/jobs/${imageObj.filename}`;
     } else {
       jobData.imageUrl = null;
     }
+    
     // Remove the image field to prevent it from being serialized
     delete jobData.image;
   } else {
