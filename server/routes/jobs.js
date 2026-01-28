@@ -149,28 +149,35 @@ router.get('/featured', async (req, res) => {
   }
 });
 
-// ========== ADMIN ROUTES (must be before /:id route) ==========
-
-// @route   GET /api/jobs/admin
-// @desc    Get all jobs for admin (including drafts, closed, etc.)
-// @access  Private (Admin)
-router.get('/admin', adminAuth[0], adminAuth[1], async (req, res) => {
+// @route   GET /api/jobs/categories/stats
+// @desc    Get job statistics by category
+// @access  Public
+router.get('/categories/stats', async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      status,
-      category,
-      featured,
-      sortBy = 'createdAt',
-      sortOrder = 'desc'
-    } = req.query;
+    const stats = await Job.findAll({
+      where: { status: 'active' },
+      attributes: [
+        [fn('COUNT', col('id')), 'count'],
+        'category'
+      ],
+      group: ['category'],
+      order: [[literal('count'), 'DESC']],
+      raw: true,
+      subQuery: false
+    });
 
-    // Build query (admin can see all statuses)
-    const where = {};
+    const formattedStats = stats.map(stat => ({
+      category: stat.category,
+      count: parseInt(stat.count)
+    }));
 
-    if (status) {
-      where.status = status;
+    res.json(formattedStats);
+  } catch (error) {
+    console.error('Get category stats error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
     }
 
     if (category) {
@@ -578,35 +585,6 @@ router.delete('/admin/:id', adminAuth[0], adminAuth[1], async (req, res) => {
   } catch (error) {
     console.error('❌ Delete job error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// @route   GET /api/jobs/categories/stats
-// @desc    Get job statistics by category
-// @access  Public
-router.get('/categories/stats', async (req, res) => {
-  try {
-    const stats = await Job.findAll({
-      where: { status: 'active' },
-      attributes: [
-        [fn('COUNT', col('id')), 'count'],
-        'category'
-      ],
-      group: ['category'],
-      order: [[literal('count'), 'DESC']],
-      raw: true,
-      subQuery: false
-    });
-
-    const formattedStats = stats.map(stat => ({
-      category: stat.category,
-      count: parseInt(stat.count)
-    }));
-
-    res.json(formattedStats);
-  } catch (error) {
-    console.error('Get category stats error:', error);
-    res.status(500).json({ message: 'Server error' });
   }
 });
 
