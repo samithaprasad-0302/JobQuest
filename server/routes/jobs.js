@@ -9,6 +9,38 @@ const { adminAuth } = require('../middleware/adminAuth');
 
 const router = express.Router();
 
+// Helper function to ensure skills is always an array
+const fixJobSkills = (job) => {
+  if (!job) return job;
+  
+  const jobData = job.toJSON ? job.toJSON() : job;
+  
+  if (jobData.skills) {
+    if (typeof jobData.skills === 'string') {
+      // Split comma-separated string and trim whitespace
+      jobData.skills = jobData.skills.split(',').map(s => s.trim());
+    } else if (Array.isArray(jobData.skills)) {
+      // Already an array, keep as is
+      jobData.skills = jobData.skills;
+    } else {
+      // Invalid format, set to empty array
+      jobData.skills = [];
+    }
+  } else {
+    jobData.skills = [];
+  }
+  
+  return jobData;
+};
+
+// Helper to fix skills in job array
+const fixJobsArray = (jobs) => {
+  if (Array.isArray(jobs)) {
+    return jobs.map(fixJobSkills);
+  }
+  return fixJobSkills(jobs);
+};
+
 // Configure multer for job image uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -115,8 +147,11 @@ router.get('/', async (req, res) => {
     // Get total count for pagination
     const total = await Job.count({ where });
 
+    // Fix skills in all jobs
+    const fixedJobs = fixJobsArray(jobs);
+
     res.json({
-      jobs,
+      jobs: fixedJobs,
       totalPages: Math.ceil(total / parseInt(limit)),
       currentPage: parseInt(page),
       total
@@ -142,7 +177,10 @@ router.get('/featured', async (req, res) => {
       limit: 6
     });
 
-    res.json(jobs);
+    // Fix skills in all jobs
+    const fixedJobs = fixJobsArray(jobs);
+
+    res.json(fixedJobs);
   } catch (error) {
     console.error('Get featured jobs error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -638,7 +676,10 @@ router.get('/:id', async (req, res) => {
     job.views = (job.views || 0) + 1;
     await job.save();
 
-    res.json(job);
+    // Fix skills before returning
+    const fixedJob = fixJobSkills(job);
+
+    res.json(fixedJob);
   } catch (error) {
     console.error('Get job error:', error);
     res.status(500).json({ message: 'Server error' });
