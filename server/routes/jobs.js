@@ -57,6 +57,8 @@ const fixJobImage = (job) => {
     } else {
       jobData.imageUrl = null;
     }
+    // Remove the image field to prevent it from being serialized
+    delete jobData.image;
   } else {
     jobData.imageUrl = null;
   }
