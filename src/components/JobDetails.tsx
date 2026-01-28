@@ -384,11 +384,7 @@ Best regards,
             <div className="mb-8 relative">
               <div className="flex justify-center">
                 <img
-                  src={
-                    job.imageUrl.startsWith('http') 
-                      ? job.imageUrl 
-                      : `https://jobquest-backend-36x6.onrender.com${job.imageUrl}`
-                  }
+                  src={`https://jobquest-backend-36x6.onrender.com${job.imageUrl}`}
                   alt="Job Poster"
                   className="w-full max-w-3xl h-auto rounded-lg shadow-lg object-contain bg-gray-100 dark:bg-gray-700"
                   style={{ minHeight: '400px', maxHeight: '600px' }}

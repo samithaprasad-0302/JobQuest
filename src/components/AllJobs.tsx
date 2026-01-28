@@ -458,7 +458,7 @@ const AllJobs: React.FC<AllJobsProps> = ({ darkMode }) => {
                   <div className="mb-1 md:mb-3 min-h-[64px] md:min-h-[128px]">
                     {job.imageUrl ? (
                       <img
-                        src={job.imageUrl}
+                        src={`https://jobquest-backend-36x6.onrender.com${job.imageUrl}`}
                         alt="Job post"
                         className="w-full h-16 md:h-32 object-cover rounded-md md:rounded-lg"
                         onLoad={() => {
