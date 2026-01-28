@@ -110,7 +110,8 @@ const Job = sequelize.define('Job', {
     allowNull: true
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  tableName: 'jobs'
 });
 
 module.exports = Job;

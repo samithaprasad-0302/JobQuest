@@ -52,7 +52,7 @@ const GuestApplication = sequelize.define('GuestApplication', {
   }
 }, {
   timestamps: true,
-  tableName: 'GuestApplications'
+  tableName: 'guestapplications'
 });
 
 module.exports = GuestApplication;

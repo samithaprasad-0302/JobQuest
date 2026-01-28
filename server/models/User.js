@@ -108,4 +108,7 @@ User.prototype.comparePassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+// Override table name to match existing database table
+User.options.tableName = 'users';
+
 module.exports = User;

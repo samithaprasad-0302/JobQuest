@@ -25,7 +25,8 @@ const Newsletter = sequelize.define('Newsletter', {
     type: DataTypes.STRING
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  tableName: 'newsletters'
 });
 
 module.exports = Newsletter;

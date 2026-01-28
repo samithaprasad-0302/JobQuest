@@ -69,7 +69,8 @@ const Company = sequelize.define('Company', {
     defaultValue: true
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  tableName: 'companies'
 });
 
 module.exports = Company;

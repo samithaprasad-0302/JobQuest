@@ -57,7 +57,8 @@ const Application = sequelize.define('Application', {
     defaultValue: DataTypes.NOW
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  tableName: 'applications'
 });
 
 module.exports = Application;
