@@ -96,29 +96,25 @@ const initializeDatabase = async (retryCount = 0) => {
 // Initialize database
 initializeDatabase();
 
-process.on('SIGTERM', async () => {
-  console.log('📝 Received SIGTERM, gracefully shutting down...');
-  try {
-    await sequelize.close();
-    console.log('✅ Database connection closed through app termination');
-    process.exit(0);
-  } catch (error) {
-    console.error('❌ Error closing database connection:', error);
-    process.exit(1);
-  }
+// Global error handling
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('💥 Uncaught Exception:', err);
+  console.error('Uncaught Exception:', err);
   process.exit(1);
 });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
+// Keep database alive - ping every 5 minutes
+setInterval(async () => {
+  try {
+    await sequelize.query('SELECT 1');
+    console.log('🔄 DB keep-alive ping');
+  } catch (err) {
+    console.error('❌ Keep-alive failed:', err.message);
+  }
+}, 300000); // every 5 minutes
 
 // Routes
 app.use('/api/auth', authRoutes);
