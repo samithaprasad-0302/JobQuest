@@ -178,6 +178,36 @@ router.get('/categories/stats', async (req, res) => {
   }
 });
 
+// ========== ADMIN ROUTES (must be before /:id route) ==========
+
+// @route   GET /api/jobs/admin
+// @desc    Get all jobs for admin (including drafts, closed, etc.)
+// @access  Private (Admin)
+router.get('/admin', adminAuth[0], adminAuth[1], async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      status,
+      category,
+      featured,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build query
+    const where = {};
+
+    if (search) {
+      where[Op.or] = [
+        { title: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    if (status) {
+      where.status = status;
     }
 
     if (category) {
