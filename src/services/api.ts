@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://jobquest-backend-36x6.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://jobquest-backend-36x6.onrender.com';
 
 // API utility functions
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
