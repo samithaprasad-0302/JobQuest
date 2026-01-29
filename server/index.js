@@ -44,12 +44,15 @@ app.use(limiter);
 
 // CORS configuration
 const corsOptions = {
-  origin: [process.env.CLIENT_URL || 'http://localhost:5173', 'https://jobquestlk.me'],
+  origin: ['https://jobquestlk.me', process.env.CLIENT_URL || 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 };
 
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
