@@ -93,7 +93,8 @@ export const updateUserStatus = async (userId: string, isActive: boolean) => {
 };
 
 export const updateUserRole = async (userId: string, role: 'user' | 'employer' | 'admin' | 'super_admin') => {
-  try {\n    const response = await patch(`/api/admin/users/${userId}/role`, { role });
+  try {
+    const response = await patch(`/api/admin/users/${userId}/role`, { role });
     return response;
   } catch (error) {
     console.error('Update user role error:', error);
