@@ -37,14 +37,14 @@ export const authAPI = {
     password: string;
     confirmPassword: string;
   }) => {
-    return apiRequest('/auth/signup', {
+    return apiRequest('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
   },
 
   signin: async (credentials: { email: string; password: string }) => {
-    return apiRequest('/auth/signin', {
+    return apiRequest('/api/auth/signin', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
@@ -53,7 +53,7 @@ export const authAPI = {
   updateProfile: async (profileData: FormData) => {
     console.log('Sending profile update request');
     const token = localStorage.getItem('jobquest_token');
-    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/users/profile`, {
       method: 'PUT',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` })
@@ -77,25 +77,25 @@ export const authAPI = {
     firstName: string;
     lastName: string;
   }) => {
-    return apiRequest('/auth/social', {
+    return apiRequest('/api/auth/social', {
       method: 'POST',
       body: JSON.stringify(socialData),
     });
   },
 
   getCurrentUser: async () => {
-    return apiRequest('/auth/me');
+    return apiRequest('/api/auth/me');
   },
 
   forgotPassword: async (email: string) => {
-    return apiRequest('/auth/forgot-password', {
+    return apiRequest('/api/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
     });
   },
 
   resetPassword: async (token: string, password: string) => {
-    return apiRequest('/auth/reset-password', {
+    return apiRequest('/api/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify({ token, password }),
     });
@@ -126,52 +126,52 @@ export const jobsAPI = {
       }, {} as Record<string, string>)
     ).toString();
 
-    return apiRequest(`/jobs?${queryString}`);
+    return apiRequest(`/api/jobs?${queryString}`);
   },
 
   getFeaturedJobs: async () => {
-    return apiRequest('/jobs/featured');
+    return apiRequest('/api/jobs/featured');
   },
 
   getJob: async (id: string) => {
-    return apiRequest(`/jobs/${id}`);
+    return apiRequest(`/api/jobs/${id}`);
   },
 
   createJob: async (jobData: any) => {
-    return apiRequest('/jobs', {
+    return apiRequest('/api/jobs', {
       method: 'POST',
       body: JSON.stringify(jobData),
     });
   },
 
   applyToJob: async (jobId: string, applicationData: { coverLetter?: string }) => {
-    return apiRequest(`/jobs/${jobId}/apply`, {
+    return apiRequest(`/api/jobs/${jobId}/apply`, {
       method: 'PUT',
       body: JSON.stringify(applicationData),
     });
   },
 
   saveJob: async (jobId: string) => {
-    return apiRequest(`/jobs/${jobId}/save`, {
+    return apiRequest(`/api/jobs/${jobId}/save`, {
       method: 'PUT',
     });
   },
 
   getCategoryStats: async () => {
-    return apiRequest('/jobs/categories/stats');
+    return apiRequest('/api/jobs/categories/stats');
   },
 };
 
 // Users API
 export const usersAPI = {
   getProfile: async () => {
-    return apiRequest('/users/profile');
+    return apiRequest('/api/users/profile');
   },
 
   updateProfile: async (profileData: FormData) => {
     const token = localStorage.getItem('jobquest_token');
     
-    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/users/profile`, {
       method: 'PUT',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),
@@ -188,23 +188,23 @@ export const usersAPI = {
   },
 
   getSavedJobs: async () => {
-    return apiRequest('/users/saved-jobs');
+    return apiRequest('/api/users/saved-jobs');
   },
 
   saveJob: async (jobId: string) => {
-    return apiRequest(`/users/save-job/${jobId}`, {
+    return apiRequest(`/api/users/save-job/${jobId}`, {
       method: 'POST',
     });
   },
 
   unsaveJob: async (jobId: string) => {
-    return apiRequest(`/users/unsave-job/${jobId}`, {
+    return apiRequest(`/api/users/unsave-job/${jobId}`, {
       method: 'DELETE',
     });
   },
 
   getAppliedJobs: async () => {
-    return apiRequest('/users/applied-jobs');
+    return apiRequest('/api/users/applied-jobs');
   },
 
   updatePreferences: async (preferences: {
@@ -212,14 +212,14 @@ export const usersAPI = {
     newsletter?: boolean;
     darkMode?: boolean;
   }) => {
-    return apiRequest('/users/preferences', {
+    return apiRequest('/api/users/preferences', {
       method: 'PUT',
       body: JSON.stringify(preferences),
     });
   },
 
   deleteAccount: async () => {
-    return apiRequest('/users/account', {
+    return apiRequest('/api/users/account', {
       method: 'DELETE',
     });
   },
@@ -244,15 +244,15 @@ export const companiesAPI = {
       }, {} as Record<string, string>)
     ).toString();
 
-    return apiRequest(`/companies?${queryString}`);
+    return apiRequest(`/api/companies?${queryString}`);
   },
 
   getFeaturedCompanies: async () => {
-    return apiRequest('/companies/featured');
+    return apiRequest('/api/companies/featured');
   },
 
   getCompany: async (id: string) => {
-    return apiRequest(`/companies/${id}`);
+    return apiRequest(`/api/companies/${id}`);
   },
 
   getCompanyJobs: async (id: string, params: { page?: number; limit?: number } = {}) => {
@@ -266,11 +266,11 @@ export const companiesAPI = {
       }, {} as Record<string, string>)
     ).toString();
 
-    return apiRequest(`/companies/${id}/jobs?${queryString}`);
+    return apiRequest(`/api/companies/${id}/jobs?${queryString}`);
   },
 
   followCompany: async (id: string) => {
-    return apiRequest(`/companies/${id}/follow`, {
+    return apiRequest(`/api/companies/${id}/follow`, {
       method: 'PUT',
     });
   },
@@ -287,7 +287,7 @@ export const applicationsAPI = {
     emailBody?: string;
     notes?: string;
   }) => {
-    return apiRequest('/applications', {
+    return apiRequest('/api/applications', {
       method: 'POST',
       body: JSON.stringify(applicationData),
     });
@@ -310,12 +310,12 @@ export const applicationsAPI = {
       }, {} as Record<string, string>)
     ).toString();
 
-    return apiRequest(`/applications?${queryString}`);
+    return apiRequest(`/api/applications?${queryString}`);
   },
 
   // Get a specific application
   getApplication: async (id: string) => {
-    return apiRequest(`/applications/${id}`);
+    return apiRequest(`/api/applications/${id}`);
   },
 
   // Update application status and notes
@@ -323,7 +323,7 @@ export const applicationsAPI = {
     status?: string;
     notes?: string;
   }) => {
-    return apiRequest(`/applications/${id}`, {
+    return apiRequest(`/api/applications/${id}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
     });
@@ -331,47 +331,47 @@ export const applicationsAPI = {
 
   // Delete an application
   deleteApplication: async (id: string) => {
-    return apiRequest(`/applications/${id}`, {
+    return apiRequest(`/api/applications/${id}`, {
       method: 'DELETE',
     });
   },
 
   // Get application statistics
   getApplicationStats: async () => {
-    return apiRequest('/applications/stats/summary');
+    return apiRequest('/api/applications/stats/summary');
   },
 };
 
 // Newsletter API
 export const newsletterAPI = {
   subscribe: async (email: string) => {
-    return apiRequest('/newsletter/subscribe', {
+    return apiRequest('/api/newsletter/subscribe', {
       method: 'POST',
       body: JSON.stringify({ email }),
     });
   },
 
   getSubscribers: async () => {
-    return apiRequest('/newsletter/subscribers', {
+    return apiRequest('/api/newsletter/subscribers', {
       method: 'GET',
     });
   },
 
   getSubscriberCount: async () => {
-    return apiRequest('/newsletter/subscribers/count', {
+    return apiRequest('/api/newsletter/subscribers/count', {
       method: 'GET',
     });
   },
 
   unsubscribe: async (email: string) => {
-    return apiRequest('/newsletter/unsubscribe', {
+    return apiRequest('/api/newsletter/unsubscribe', {
       method: 'POST',
       body: JSON.stringify({ email }),
     });
   },
 
   deleteSubscriber: async (id: string) => {
-    return apiRequest(`/newsletter/subscribers/${id}`, {
+    return apiRequest(`/api/newsletter/subscribers/${id}`, {
       method: 'DELETE',
     });
   },
@@ -387,14 +387,14 @@ export const contactAPI = {
     subject: string;
     message: string;
   }) => {
-    return apiRequest('/contact/submit', {
+    return apiRequest('/api/contact/submit', {
       method: 'POST',
       body: JSON.stringify(contactData),
     });
   },
 
   getContacts: async (status?: string, page = 1, limit = 10) => {
-    let url = `/contact?page=${page}&limit=${limit}`;
+    let url = `/api/contact?page=${page}&limit=${limit}`;
     if (status) {
       url += `&status=${status}`;
     }
@@ -404,33 +404,33 @@ export const contactAPI = {
   },
 
   getContactStats: async () => {
-    return apiRequest('/contact/stats/summary', {
+    return apiRequest('/api/contact/stats/summary', {
       method: 'GET',
     });
   },
 
   getContactDetail: async (id: string) => {
-    return apiRequest(`/contact/${id}`, {
+    return apiRequest(`/api/contact/${id}`, {
       method: 'GET',
     });
   },
 
   replyToContact: async (id: string, reply: string) => {
-    return apiRequest(`/contact/${id}/reply`, {
+    return apiRequest(`/api/contact/${id}/reply`, {
       method: 'PUT',
       body: JSON.stringify({ reply }),
     });
   },
 
   updateContactStatus: async (id: string, status: string) => {
-    return apiRequest(`/contact/${id}/status`, {
+    return apiRequest(`/api/contact/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),
     });
   },
 
   deleteContact: async (id: string) => {
-    return apiRequest(`/contact/${id}`, {
+    return apiRequest(`/api/contact/${id}`, {
       method: 'DELETE',
     });
   },
