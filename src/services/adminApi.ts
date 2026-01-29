@@ -42,7 +42,7 @@ const patch = (endpoint: string, data?: any) => apiRequest(endpoint, {
 // Admin Dashboard
 export const getAdminDashboard = async () => {
   try {
-    const response = await get('/api/admin/dashboard');
+    const response = await get('/admin/dashboard');
     return response;
   } catch (error) {
     console.error('Get admin dashboard error:', error);
@@ -53,7 +53,7 @@ export const getAdminDashboard = async () => {
 // Admin Permissions
 export const getAdminPermissions = async () => {
   try {
-    const response = await get('/api/admin/permissions');
+    const response = await get('/admin/permissions');
     return response;
   } catch (error) {
     console.error('Get admin permissions error:', error);
@@ -64,7 +64,7 @@ export const getAdminPermissions = async () => {
 // User Management
 export const getUsers = async (params: Record<string, string | number | boolean> = {}) => {
   try {
-    const response = await get('/api/admin/users', params);
+    const response = await get('/admin/users', params);
     return response;
   } catch (error) {
     console.error('Get users error:', error);
@@ -74,7 +74,7 @@ export const getUsers = async (params: Record<string, string | number | boolean>
 
 export const getUserDetails = async (userId: string) => {
   try {
-    const response = await get(`/api/admin/users/${userId}`);
+    const response = await get(`/admin/users/${userId}`);
     return response;
   } catch (error) {
     console.error('Get user details error:', error);
@@ -84,7 +84,7 @@ export const getUserDetails = async (userId: string) => {
 
 export const updateUserStatus = async (userId: string, isActive: boolean) => {
   try {
-    const response = await patch(`/api/admin/users/${userId}/status`, { isActive });
+    const response = await patch(`/admin/users/${userId}/status`, { isActive });
     return response;
   } catch (error) {
     console.error('Update user status error:', error);
@@ -94,7 +94,7 @@ export const updateUserStatus = async (userId: string, isActive: boolean) => {
 
 export const updateUserRole = async (userId: string, role: 'user' | 'employer' | 'admin' | 'super_admin') => {
   try {
-    const response = await patch(`/api/admin/users/${userId}/role`, { role });
+    const response = await patch(`/admin/users/${userId}/role`, { role });
     return response;
   } catch (error) {
     console.error('Update user role error:', error);
@@ -105,7 +105,7 @@ export const updateUserRole = async (userId: string, role: 'user' | 'employer' |
 // Job Management
 export const getAdminJobs = async (params: Record<string, string | number | boolean> = {}) => {
   try {
-    const response = await get('/api/admin/jobs', params);
+    const response = await get('/admin/jobs', params);
     return response;
   } catch (error) {
     console.error('Get admin jobs error:', error);
@@ -115,7 +115,7 @@ export const getAdminJobs = async (params: Record<string, string | number | bool
 
 export const updateJobStatus = async (jobId: string, status: 'pending' | 'active' | 'rejected' | 'expired') => {
   try {
-    const response = await patch(`/api/admin/jobs/${jobId}/status`, { status });
+    const response = await patch(`/admin/jobs/${jobId}/status`, { status });
     return response;
   } catch (error) {
     console.error('Update job status error:', error);
@@ -126,7 +126,7 @@ export const updateJobStatus = async (jobId: string, status: 'pending' | 'active
 // Company Management
 export const getAdminCompanies = async (params: Record<string, string | number | boolean> = {}) => {
   try {
-    const response = await get('/api/admin/companies', params);
+    const response = await get('/admin/companies', params);
     return response;
   } catch (error) {
     console.error('Get admin companies error:', error);
@@ -136,7 +136,7 @@ export const getAdminCompanies = async (params: Record<string, string | number |
 
 export const updateCompanyVerification = async (companyId: string, isVerified: boolean) => {
   try {
-    const response = await patch(`/api/admin/companies/${companyId}/verify`, { isVerified });
+    const response = await patch(`/admin/companies/${companyId}/verify`, { isVerified });
     return response;
   } catch (error) {
     console.error('Update company verification error:', error);
@@ -147,7 +147,7 @@ export const updateCompanyVerification = async (companyId: string, isVerified: b
 // Guest Application Management
 export const getGuestApplications = async (params: Record<string, string | number | boolean> = {}) => {
   try {
-    const response = await get('/api/admin/guest-applications', params);
+    const response = await get('/admin/guest-applications', params);
     return response;
   } catch (error) {
     console.error('Get guest applications error:', error);
@@ -157,7 +157,7 @@ export const getGuestApplications = async (params: Record<string, string | numbe
 
 export const getGuestApplicationStats = async () => {
   try {
-    const response = await get('/api/admin/guest-applications/stats');
+    const response = await get('/admin/guest-applications/stats');
     return response;
   } catch (error) {
     console.error('Get guest application stats error:', error);
@@ -171,7 +171,7 @@ export const updateGuestApplicationStatus = async (
   notes?: string
 ) => {
   try {
-    const response = await patch(`/api/admin/guest-applications/${applicationId}/status`, { 
+    const response = await patch(`/admin/guest-applications/${applicationId}/status`, { 
       status, 
       notes 
     });
@@ -184,7 +184,7 @@ export const updateGuestApplicationStatus = async (
 
 export const deleteGuestApplication = async (applicationId: string) => {
   try {
-    const response = await apiRequest(`/api/admin/guest-applications/${applicationId}`, {
+    const response = await apiRequest(`/admin/guest-applications/${applicationId}`, {
       method: 'DELETE'
     });
     return response;
@@ -198,7 +198,7 @@ export const downloadGuestApplicationsCSV = async () => {
   try {
     const token = localStorage.getItem('jobquest_token');
     
-    const response = await fetch(`${API_BASE_URL}/api/admin/guest-applications/export/csv`, {
+    const response = await fetch(`${API_BASE_URL}/admin/guest-applications/export/csv`, {
       method: 'GET',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),
