@@ -12,14 +12,21 @@ const sequelize = new Sequelize(
     logging: false,
 
     pool: {
-      max: 10,          // max connections
-      min: 0,
-      acquire: 30000,
-      idle: 10000
+      max: 5,           // max connections
+      min: 2,           // keep minimum 2 connections alive
+      acquire: 60000,   // 60 seconds to acquire connection
+      idle: 30000       // 30 seconds before closing idle connection
     },
 
     dialectOptions: {
-      connectTimeout: 60000
+      connectTimeout: 60000,
+      enableKeepAlive: true,
+      keepAliveInterval: 30000
+    },
+
+    retry: {
+      max: 3,
+      timeout: 5000
     }
   }
 );
@@ -30,7 +37,7 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('✅ MySQL Connected');
   } catch (error) {
-    console.error('❌ MySQL connection error:', error);
+    console.error('❌ MySQL connection error:', error.message);
     setTimeout(connectDB, 5000); // retry after 5 seconds
   }
 };

@@ -111,15 +111,22 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-// Keep database alive - ping every 5 minutes
+// Keep database alive - ping every 2 minutes
 setInterval(async () => {
   try {
     await sequelize.query('SELECT 1');
-    console.log('🔄 DB keep-alive ping');
+    console.log('🔄 DB keep-alive ping successful');
   } catch (err) {
     console.error('❌ Keep-alive failed:', err.message);
+    // Try to reconnect on failure
+    try {
+      await sequelize.authenticate();
+      console.log('✅ Database reconnected');
+    } catch (reconnectErr) {
+      console.error('❌ Reconnection failed:', reconnectErr.message);
+    }
   }
-}, 300000); // every 5 minutes
+}, 120000); // every 2 minutes
 
 // Routes
 app.use('/api/auth', authRoutes);
